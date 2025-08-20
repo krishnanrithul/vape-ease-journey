@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Home, TrendingUp, Target, Clock } from 'lucide-react';
+import { Home, TrendingUp, Target, Trophy, Clock } from 'lucide-react';
 
 export function BottomNav() {
   const navItems = [

@@ -9,6 +9,7 @@ import Home from "./pages/Home";
 import TagSelection from "./pages/TagSelection";
 import Insights from "./pages/Insights";
 import Goals from "./pages/Goals";
+import Gamification from "./pages/Gamification";
 import CravingDelay from "./pages/CravingDelay";
 import NotFound from "./pages/NotFound";
 import { BottomNav } from "./components/BottomNav";
@@ -30,6 +31,7 @@ const App = () => (
                 <Route path="/tag" element={<TagSelection />} />
                 <Route path="/insights" element={<Insights />} />
                 <Route path="/goals" element={<Goals />} />
+                <Route path="/gamification" element={<Gamification />} />
                 <Route path="/delay" element={<CravingDelay />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
