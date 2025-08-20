@@ -1,104 +1,171 @@
+import { useState } from 'react';
+import { ArrowRight, ArrowLeft, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Heart, Shield, TrendingDown, CheckCircle } from 'lucide-react';
 import onboardingWelcome from '@/assets/onboarding-welcome.jpg';
 
 interface OnboardingFlowProps {
-  currentStep: number;
-  onNext: () => void;
-  onPrev: () => void;
   onComplete: () => void;
 }
 
-const onboardingSteps = [
+const ONBOARDING_STEPS = [
   {
-    title: "Welcome to Your Safe Space",
-    description: "This is a judgment-free zone designed to support your journey with understanding and compassion.",
-    icon: Heart,
-    content: "We believe in progress, not perfection. Every step forward counts, no matter how small."
+    id: 'welcome',
+    title: 'Welcome to VapeWise',
+    subtitle: 'Your mindful tracking companion',
+    description: "We're here to support your journey toward mindful vaping habits. No judgment, just gentle guidance and awareness.",
+    image: onboardingWelcome,
+    cta: 'Get Started'
   },
   {
-    title: "Your Privacy Matters",
-    description: "All your data stays private on your device. No accounts, no sharing, no judgment.",
-    icon: Shield,
-    content: "Track mindfully knowing that your journey is completely private and secure."
+    id: 'approach',
+    title: 'Our Supportive Approach',
+    subtitle: 'Progress, not perfection',
+    description: "Track your habits to build awareness. Small, gradual changes lead to lasting results. You're in control of your journey.",
+    icon: '🌱',
+    features: [
+      'Non-judgmental tracking',
+      'Gradual reduction support',
+      'Personal insights',
+      'Streak motivation'
+    ]
   },
   {
-    title: "Track to Understand",
-    description: "Awareness is the first step toward positive change. Knowledge empowers better choices.",
-    icon: TrendingDown,
-    content: "By understanding your patterns, you can make gradual, sustainable improvements."
+    id: 'privacy',
+    title: 'Your Data Stays Private',
+    subtitle: 'Complete privacy guaranteed',
+    description: "All your data stays on your device. We don't collect, share, or store any of your personal tracking information.",
+    icon: '🔒',
+    features: [
+      'Local data storage only',
+      'No account required',
+      'No data sharing',
+      'Complete anonymity'
+    ]
   },
   {
-    title: "You're Ready to Begin",
-    description: "Start your mindful tracking journey with self-compassion and realistic goals.",
-    icon: CheckCircle,
-    content: "Remember: This tool is here to support you, not judge you. Be kind to yourself."
+    id: 'ready',
+    title: "You're All Set!",
+    subtitle: 'Start your mindful journey',
+    description: "Ready to begin? Remember: every step toward awareness is progress. Be kind to yourself along the way.",
+    icon: '✨',
+    cta: 'Start Tracking'
   }
 ];
 
-export function OnboardingFlow({ currentStep, onNext, onPrev, onComplete }: OnboardingFlowProps) {
-  const step = onboardingSteps[currentStep];
-  const IconComponent = step.icon;
-  const progress = ((currentStep + 1) / onboardingSteps.length) * 100;
+export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
+  const [currentStep, setCurrentStep] = useState(0);
+  const step = ONBOARDING_STEPS[currentStep];
+  const isLastStep = currentStep === ONBOARDING_STEPS.length - 1;
+
+  const handleNext = () => {
+    if (isLastStep) {
+      onComplete();
+    } else {
+      setCurrentStep(prev => prev + 1);
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStep > 0) {
+      setCurrentStep(prev => prev - 1);
+    }
+  };
 
   return (
-    <div className="fixed inset-0 bg-background/95 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-      <Card className="w-full max-w-md p-8 shadow-elevated border-0 bg-card/95 backdrop-blur-sm">
-        {/* Progress */}
-        <div className="mb-6">
-          <Progress value={progress} className="h-2 mb-2" />
-          <p className="text-xs text-muted-foreground text-center">
-            Step {currentStep + 1} of {onboardingSteps.length}
-          </p>
+    <div className="min-h-screen bg-gradient-calm flex items-center justify-center p-6">
+      <Card className="w-full max-w-md p-8 shadow-floating border-0 bg-card/90 backdrop-blur-sm">
+        {/* Progress Indicator */}
+        <div className="flex justify-center mb-8">
+          <div className="flex gap-2">
+            {ONBOARDING_STEPS.map((_, index) => (
+              <div
+                key={index}
+                className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                  index <= currentStep 
+                    ? 'bg-primary scale-125' 
+                    : 'bg-muted scale-100'
+                }`}
+              />
+            ))}
+          </div>
         </div>
 
-        {/* Hero Image */}
-        {currentStep === 0 && (
-          <div className="mb-6">
-            <img 
-              src={onboardingWelcome} 
-              alt="Welcome" 
-              className="w-full h-32 object-cover rounded-xl shadow-soft"
-            />
-          </div>
-        )}
-
-        {/* Icon */}
-        <div className="text-center mb-6">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-accent flex items-center justify-center shadow-medium">
-            <IconComponent size={32} className="text-accent-foreground" />
-          </div>
-          <h2 className="text-xl font-bold text-foreground mb-2">{step.title}</h2>
-          <p className="text-muted-foreground text-sm mb-4">{step.description}</p>
-          <p className="text-foreground text-sm font-medium leading-relaxed">{step.content}</p>
-        </div>
-
-        {/* Actions */}
-        <div className="flex gap-3">
-          {currentStep > 0 && (
-            <Button variant="outline" onClick={onPrev} className="flex-1">
-              Previous
-            </Button>
-          )}
-          {currentStep < onboardingSteps.length - 1 ? (
-            <Button onClick={onNext} className="flex-1">
-              Continue
-            </Button>
+        {/* Content */}
+        <div className="text-center mb-8">
+          {/* Image or Icon */}
+          {step.image ? (
+            <div className="w-32 h-32 mx-auto mb-6 rounded-2xl overflow-hidden shadow-medium">
+              <img 
+                src={step.image} 
+                alt={step.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
           ) : (
-            <Button onClick={onComplete} className="flex-1">
-              Get Started
-            </Button>
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-primary flex items-center justify-center shadow-soft">
+              <span className="text-3xl">{step.icon}</span>
+            </div>
           )}
+
+          {/* Title & Subtitle */}
+          <h1 className="text-2xl font-bold mb-2 tracking-tight">{step.title}</h1>
+          <p className="text-primary font-semibold mb-4">{step.subtitle}</p>
+          
+          {/* Description */}
+          <p className="text-muted-foreground leading-relaxed mb-6">
+            {step.description}
+          </p>
+
+          {/* Features List */}
+          {step.features && (
+            <div className="space-y-3 mb-6">
+              {step.features.map((feature, index) => (
+                <div key={index} className="flex items-center gap-3 text-sm">
+                  <div className="w-5 h-5 rounded-full bg-gradient-success flex items-center justify-center flex-shrink-0">
+                    <Check size={12} className="text-secondary-foreground" />
+                  </div>
+                  <span className="text-muted-foreground font-medium">{feature}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Navigation */}
+        <div className="flex justify-between items-center">
+          <Button
+            variant="ghost"
+            onClick={handleBack}
+            disabled={currentStep === 0}
+            className={currentStep === 0 ? 'invisible' : ''}
+          >
+            <ArrowLeft size={16} className="mr-2" />
+            Back
+          </Button>
+
+          <Button
+            variant={isLastStep ? 'success' : 'default'}
+            onClick={handleNext}
+            className="shadow-medium hover:shadow-large"
+          >
+            {step.cta || 'Continue'}
+            {!isLastStep && <ArrowRight size={16} className="ml-2" />}
+          </Button>
         </div>
 
         {/* Skip Option */}
-        <div className="text-center mt-4">
-          <Button variant="ghost" size="sm" onClick={onComplete}>
-            Skip for now
-          </Button>
-        </div>
+        {!isLastStep && (
+          <div className="text-center mt-4">
+            <Button
+              variant="link"
+              onClick={onComplete}
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              Skip for now
+            </Button>
+          </div>
+        )}
       </Card>
     </div>
   );

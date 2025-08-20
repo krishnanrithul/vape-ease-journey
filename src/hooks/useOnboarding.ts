@@ -1,35 +1,37 @@
 import { useState, useEffect } from 'react';
 
 export function useOnboarding() {
-  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(true);
-  const [currentStep, setCurrentStep] = useState(0);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null);
+  const [isFirstVisit, setIsFirstVisit] = useState(false);
 
   useEffect(() => {
-    const seen = localStorage.getItem('has-seen-onboarding');
-    if (!seen) {
+    const hasOnboarded = localStorage.getItem('vape-onboarding-complete');
+    const hasData = localStorage.getItem('vape-puffs');
+    
+    if (!hasOnboarded && !hasData) {
+      setIsFirstVisit(true);
       setHasSeenOnboarding(false);
+    } else {
+      setHasSeenOnboarding(true);
     }
   }, []);
 
   const completeOnboarding = () => {
-    localStorage.setItem('has-seen-onboarding', 'true');
+    localStorage.setItem('vape-onboarding-complete', 'true');
     setHasSeenOnboarding(true);
-    setCurrentStep(0);
+    setIsFirstVisit(false);
   };
 
-  const nextStep = () => {
-    setCurrentStep(prev => prev + 1);
-  };
-
-  const prevStep = () => {
-    setCurrentStep(prev => Math.max(0, prev - 1));
+  const resetOnboarding = () => {
+    localStorage.removeItem('vape-onboarding-complete');
+    setHasSeenOnboarding(false);
+    setIsFirstVisit(true);
   };
 
   return {
     hasSeenOnboarding,
-    currentStep,
-    nextStep,
-    prevStep,
-    completeOnboarding
+    isFirstVisit,
+    completeOnboarding,
+    resetOnboarding
   };
 }

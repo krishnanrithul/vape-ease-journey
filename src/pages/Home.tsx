@@ -5,24 +5,38 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { usePuffData } from '@/hooks/usePuffData';
+import { useOnboarding } from '@/hooks/useOnboarding';
 import { AchievementCard } from '@/components/AchievementCard';
 import { StreakCard } from '@/components/StreakCard';
 import { OnboardingFlow } from '@/components/OnboardingFlow';
 import { EmptyState } from '@/components/EmptyState';
-import { useOnboarding } from '@/hooks/useOnboarding';
 import { toast } from 'sonner';
 import heroImage from '@/assets/hero-illustration.jpg';
-import emptyTrackingImage from '@/assets/empty-state-tracking.jpg';
+import emptyStateTracking from '@/assets/empty-state-tracking.jpg';
 
 export default function Home() {
   const navigate = useNavigate();
   const { addPuff, getTodaysPuffs, dailyGoal, achievements, streakData, getStreakIcon, getStreakMessage, puffs } = usePuffData();
-  const { hasSeenOnboarding, currentStep, nextStep, prevStep, completeOnboarding } = useOnboarding();
+  const { hasSeenOnboarding, completeOnboarding } = useOnboarding();
   const [quickCount, setQuickCount] = useState(1);
   
   const todaysPuffs = getTodaysPuffs();
   const progressPercent = Math.min((todaysPuffs / dailyGoal) * 100, 100);
-  const hasData = puffs.length > 0;
+  const hasAnyData = puffs.length > 0;
+
+  // Show onboarding for first-time users
+  if (hasSeenOnboarding === false) {
+    return <OnboardingFlow onComplete={completeOnboarding} />;
+  }
+
+  // Show loading state while checking onboarding status
+  if (hasSeenOnboarding === null) {
+    return (
+      <div className="min-h-screen bg-gradient-calm flex items-center justify-center">
+        <div className="w-8 h-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   const handlePuffLog = () => {
     addPuff(quickCount);
@@ -32,71 +46,33 @@ export default function Home() {
     setQuickCount(1);
   };
 
-  // Show onboarding if user hasn't seen it
-  if (!hasSeenOnboarding) {
-    return (
-      <OnboardingFlow
-        currentStep={currentStep}
-        onNext={nextStep}
-        onPrev={prevStep}
-        onComplete={completeOnboarding}
-      />
-    );
-  }
-
-  // Show empty state if no data
-  if (!hasData) {
+  // Show empty state for first-time users with no data
+  if (!hasAnyData) {
     return (
       <div className="min-h-screen bg-gradient-calm pb-32 font-inter">
-        <div className="px-6 pt-6">
-          <div className="mb-8">
-            <h1 className="text-2xl font-bold text-foreground mb-2">Welcome to Your Journey</h1>
-            <p className="text-muted-foreground">Start tracking mindfully to build awareness</p>
+        <div className="px-6 pt-6 pb-8">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-foreground mb-2 tracking-tight">Welcome to VapeWise</h1>
+            <p className="text-muted-foreground font-medium">Start your mindful tracking journey</p>
           </div>
 
           <EmptyState
+            image={emptyStateTracking}
             title="Ready to Begin?"
-            description="Track your first puff to start understanding your patterns. Remember, this is a judgment-free space for your personal growth."
-            image={emptyTrackingImage}
-            actionText="Log My First Puff"
-            onAction={() => handlePuffLog()}
-            className="mb-6"
+            description="Log your first session to start building awareness of your vaping patterns. Every journey starts with a single step."
+            actionText="Log First Puff"
+            onAction={handlePuffLog}
           />
 
-          {/* Quick Log Section for Empty State */}
-          <Card className="p-6 shadow-elevated border-0 bg-card/90 backdrop-blur-sm">
-            <h3 className="text-lg font-bold text-foreground mb-4">Quick Log</h3>
-            <div className="flex items-center justify-between mb-6">
-              <span className="text-muted-foreground font-medium">Number of puffs</span>
-              <div className="flex items-center gap-4">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setQuickCount(Math.max(1, quickCount - 1))}
-                  className="h-10 w-10 shadow-soft"
-                >
-                  <Minus size={18} />
-                </Button>
-                <span className="text-2xl font-bold w-12 text-center tracking-tight">{quickCount}</span>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setQuickCount(quickCount + 1)}
-                  className="h-10 w-10 shadow-soft"
-                >
-                  <Plus size={18} />
-                </Button>
-              </div>
+          <div className="mt-6 p-4 bg-muted/30 rounded-xl">
+            <h3 className="font-semibold mb-2 text-sm">Why Track?</h3>
+            <div className="space-y-2 text-xs text-muted-foreground">
+              <p>• Build awareness of your habits</p>
+              <p>• Identify patterns and triggers</p>
+              <p>• Make gradual, sustainable changes</p>
+              <p>• Celebrate your progress</p>
             </div>
-            
-            <Button 
-              variant="puff"
-              onClick={handlePuffLog}
-              className="w-full h-14 text-lg font-semibold shadow-large hover:shadow-glow"
-            >
-              Log {quickCount} Puff{quickCount > 1 ? 's' : ''}
-            </Button>
-          </Card>
+          </div>
         </div>
       </div>
     );

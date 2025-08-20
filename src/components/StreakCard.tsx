@@ -13,7 +13,31 @@ interface StreakCardProps {
 
 export function StreakCard({ streakData, getStreakIcon, getStreakMessage }: StreakCardProps) {
   const progressToNext = Math.min((streakData.current % 7) / 7 * 100, 100);
-  const hasStreak = streakData.current > 0;
+
+  // Special empty state for new users
+  if (streakData.current === 0 && streakData.longest === 0) {
+    return (
+      <Card className="p-6 shadow-elevated border-0 bg-gradient-to-br from-secondary/5 to-accent/5 backdrop-blur-sm">
+        <div className="text-center">
+          <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-secondary/20 to-accent/20 flex items-center justify-center shadow-soft mb-4">
+            <span className="text-4xl opacity-60">🌰</span>
+          </div>
+
+          <h3 className="font-bold text-lg text-gradient mb-2">
+            Plant Your Seed
+          </h3>
+          
+          <p className="text-sm text-muted-foreground mb-4 font-medium">
+            Start tracking to grow your mindfulness habit!
+          </p>
+
+          <div className="text-xs text-muted-foreground bg-muted/20 rounded-lg p-3">
+            Track for consecutive days to watch your habit grow from a tiny seed into a beautiful flowering plant 🌸
+          </div>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="p-6 shadow-elevated border-0 bg-gradient-to-br from-secondary/5 to-accent/5 backdrop-blur-sm">
@@ -31,10 +55,10 @@ export function StreakCard({ streakData, getStreakIcon, getStreakMessage }: Stre
         </div>
 
         <h3 className="font-bold text-lg text-gradient mb-2">
-          {hasStreak ? `${streakData.current} Day Streak` : 'Start Your Streak'}
+          {streakData.current} Day Streak
         </h3>
         
-        <p className="text-sm text-muted-foreground mb-4 font-medium leading-relaxed">
+        <p className="text-sm text-muted-foreground mb-4 font-medium">
           {getStreakMessage()}
         </p>
 
