@@ -6,6 +6,7 @@ export function BottomNav() {
     { to: '/', icon: Home, label: 'Home' },
     { to: '/insights', icon: TrendingUp, label: 'Insights' },
     { to: '/goals', icon: Target, label: 'Goals' },
+    { to: '/gamification', icon: Trophy, label: 'Rewards' },
     { to: '/delay', icon: Clock, label: 'Delay' }
   ];
 

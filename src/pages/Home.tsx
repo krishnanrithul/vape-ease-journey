@@ -41,8 +41,6 @@ export default function Home() {
   const handlePuffLog = () => {
     addPuff(quickCount);
     toast.success(`${quickCount} puff${quickCount > 1 ? 's' : ''} logged`);
-    // Navigate to tag screen for optional tagging
-    navigate('/tag', { state: { count: quickCount } });
     setQuickCount(1);
   };
 

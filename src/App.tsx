@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { AppHeader } from "@/components/AppHeader";
 import Home from "./pages/Home";
-import TagSelection from "./pages/TagSelection";
 import Insights from "./pages/Insights";
 import Goals from "./pages/Goals";
 import Gamification from "./pages/Gamification";
@@ -28,7 +27,6 @@ const App = () => (
             <main className="flex-1">
               <Routes>
                 <Route path="/" element={<Home />} />
-                <Route path="/tag" element={<TagSelection />} />
                 <Route path="/insights" element={<Insights />} />
                 <Route path="/goals" element={<Goals />} />
                 <Route path="/gamification" element={<Gamification />} />
