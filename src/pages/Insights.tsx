@@ -13,7 +13,7 @@ export default function Insights() {
   const weekAvg = Math.round(weekTotal / 7);
 
   return (
-    <div className="min-h-screen bg-gradient-calm pb-20">
+    <div className="min-h-screen bg-gradient-calm pb-32">
       <div className="px-6 pt-8">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-foreground mb-2">Your Progress</h1>
