@@ -13,6 +13,7 @@ interface StreakCardProps {
 
 export function StreakCard({ streakData, getStreakIcon, getStreakMessage }: StreakCardProps) {
   const progressToNext = Math.min((streakData.current % 7) / 7 * 100, 100);
+  const hasStreak = streakData.current > 0;
 
   return (
     <Card className="p-6 shadow-elevated border-0 bg-gradient-to-br from-secondary/5 to-accent/5 backdrop-blur-sm">
@@ -30,10 +31,10 @@ export function StreakCard({ streakData, getStreakIcon, getStreakMessage }: Stre
         </div>
 
         <h3 className="font-bold text-lg text-gradient mb-2">
-          {streakData.current} Day Streak
+          {hasStreak ? `${streakData.current} Day Streak` : 'Start Your Streak'}
         </h3>
         
-        <p className="text-sm text-muted-foreground mb-4 font-medium">
+        <p className="text-sm text-muted-foreground mb-4 font-medium leading-relaxed">
           {getStreakMessage()}
         </p>
 

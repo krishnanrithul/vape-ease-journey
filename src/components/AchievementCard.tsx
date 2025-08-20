@@ -23,12 +23,12 @@ export function AchievementCard({ achievements }: AchievementCardProps) {
     return (
       <Card className="p-6 shadow-elevated border-0 bg-card/80 backdrop-blur-sm">
         <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/50 flex items-center justify-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-accent/20 flex items-center justify-center shadow-soft">
             <span className="text-2xl">🏆</span>
           </div>
-          <h3 className="font-semibold text-foreground mb-2">Start Your Journey</h3>
-          <p className="text-sm text-muted-foreground">
-            Begin tracking to unlock your first achievement!
+          <h3 className="font-semibold text-foreground mb-2">Achievements Await</h3>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Your first achievement is just one tracked puff away. Every journey starts with a single step!
           </p>
         </div>
       </Card>

@@ -7,16 +7,22 @@ import { Progress } from '@/components/ui/progress';
 import { usePuffData } from '@/hooks/usePuffData';
 import { AchievementCard } from '@/components/AchievementCard';
 import { StreakCard } from '@/components/StreakCard';
+import { OnboardingFlow } from '@/components/OnboardingFlow';
+import { EmptyState } from '@/components/EmptyState';
+import { useOnboarding } from '@/hooks/useOnboarding';
 import { toast } from 'sonner';
 import heroImage from '@/assets/hero-illustration.jpg';
+import emptyTrackingImage from '@/assets/empty-state-tracking.jpg';
 
 export default function Home() {
   const navigate = useNavigate();
-  const { addPuff, getTodaysPuffs, dailyGoal, achievements, streakData, getStreakIcon, getStreakMessage } = usePuffData();
+  const { addPuff, getTodaysPuffs, dailyGoal, achievements, streakData, getStreakIcon, getStreakMessage, puffs } = usePuffData();
+  const { hasSeenOnboarding, currentStep, nextStep, prevStep, completeOnboarding } = useOnboarding();
   const [quickCount, setQuickCount] = useState(1);
   
   const todaysPuffs = getTodaysPuffs();
   const progressPercent = Math.min((todaysPuffs / dailyGoal) * 100, 100);
+  const hasData = puffs.length > 0;
 
   const handlePuffLog = () => {
     addPuff(quickCount);
@@ -25,6 +31,76 @@ export default function Home() {
     navigate('/tag', { state: { count: quickCount } });
     setQuickCount(1);
   };
+
+  // Show onboarding if user hasn't seen it
+  if (!hasSeenOnboarding) {
+    return (
+      <OnboardingFlow
+        currentStep={currentStep}
+        onNext={nextStep}
+        onPrev={prevStep}
+        onComplete={completeOnboarding}
+      />
+    );
+  }
+
+  // Show empty state if no data
+  if (!hasData) {
+    return (
+      <div className="min-h-screen bg-gradient-calm pb-32 font-inter">
+        <div className="px-6 pt-6">
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-foreground mb-2">Welcome to Your Journey</h1>
+            <p className="text-muted-foreground">Start tracking mindfully to build awareness</p>
+          </div>
+
+          <EmptyState
+            title="Ready to Begin?"
+            description="Track your first puff to start understanding your patterns. Remember, this is a judgment-free space for your personal growth."
+            image={emptyTrackingImage}
+            actionText="Log My First Puff"
+            onAction={() => handlePuffLog()}
+            className="mb-6"
+          />
+
+          {/* Quick Log Section for Empty State */}
+          <Card className="p-6 shadow-elevated border-0 bg-card/90 backdrop-blur-sm">
+            <h3 className="text-lg font-bold text-foreground mb-4">Quick Log</h3>
+            <div className="flex items-center justify-between mb-6">
+              <span className="text-muted-foreground font-medium">Number of puffs</span>
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setQuickCount(Math.max(1, quickCount - 1))}
+                  className="h-10 w-10 shadow-soft"
+                >
+                  <Minus size={18} />
+                </Button>
+                <span className="text-2xl font-bold w-12 text-center tracking-tight">{quickCount}</span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setQuickCount(quickCount + 1)}
+                  className="h-10 w-10 shadow-soft"
+                >
+                  <Plus size={18} />
+                </Button>
+              </div>
+            </div>
+            
+            <Button 
+              variant="puff"
+              onClick={handlePuffLog}
+              className="w-full h-14 text-lg font-semibold shadow-large hover:shadow-glow"
+            >
+              Log {quickCount} Puff{quickCount > 1 ? 's' : ''}
+            </Button>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-calm pb-32 font-inter">

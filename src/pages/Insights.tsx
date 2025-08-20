@@ -1,10 +1,12 @@
 import { Card } from '@/components/ui/card';
 import { usePuffData } from '@/hooks/usePuffData';
 import { AnimatedChart } from '@/components/AnimatedChart';
+import { EmptyState } from '@/components/EmptyState';
 import { TrendingDown, Calendar, Target, Trophy } from 'lucide-react';
+import emptyInsightsImage from '@/assets/empty-state-insights.jpg';
 
 export default function Insights() {
-  const { getWeeklyData, getInsight, getTodaysPuffs, dailyGoal, achievements, getRecentAchievements } = usePuffData();
+  const { getWeeklyData, getInsight, getTodaysPuffs, dailyGoal, achievements, getRecentAchievements, puffs } = usePuffData();
   
   const weeklyData = getWeeklyData();
   const insight = getInsight();
@@ -12,6 +14,29 @@ export default function Insights() {
   const weekTotal = weeklyData.reduce((sum, day) => sum + day.puffs, 0);
   const weekAvg = Math.round(weekTotal / 7);
   const recentAchievements = getRecentAchievements();
+  const hasData = puffs.length > 0;
+
+  // Show empty state if no data
+  if (!hasData) {
+    return (
+      <div className="min-h-screen bg-gradient-calm pb-32">
+        <div className="px-6 pt-6">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-foreground mb-2">Your Insights</h1>
+            <p className="text-muted-foreground">Data will appear here as you track</p>
+          </div>
+
+          <EmptyState
+            title="No Insights Yet"
+            description="Start tracking your puffs to see meaningful patterns and insights about your habits. Your data will help you make informed decisions."
+            image={emptyInsightsImage}
+            actionText="Start Tracking"
+            onAction={() => window.history.back()}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-calm pb-32">
