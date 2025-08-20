@@ -1,10 +1,12 @@
 import { Card } from '@/components/ui/card';
 import { usePuffData } from '@/hooks/usePuffData';
 import { AnimatedChart } from '@/components/AnimatedChart';
+import { EmptyState } from '@/components/EmptyState';
 import { TrendingDown, Calendar, Target, Trophy } from 'lucide-react';
+import emptyStateInsights from '@/assets/empty-state-insights.jpg';
 
 export default function Insights() {
-  const { getWeeklyData, getInsight, getTodaysPuffs, dailyGoal, achievements, getRecentAchievements } = usePuffData();
+  const { getWeeklyData, getInsight, getTodaysPuffs, dailyGoal, achievements, getRecentAchievements, puffs } = usePuffData();
   
   const weeklyData = getWeeklyData();
   const insight = getInsight();
@@ -12,6 +14,42 @@ export default function Insights() {
   const weekTotal = weeklyData.reduce((sum, day) => sum + day.puffs, 0);
   const weekAvg = Math.round(weekTotal / 7);
   const recentAchievements = getRecentAchievements();
+  const hasAnyData = puffs.length > 0;
+
+  // Show empty state when no data exists
+  if (!hasAnyData) {
+    return (
+      <div className="min-h-screen bg-gradient-calm pb-32">
+        <div className="px-6 pt-6">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-foreground mb-2">Your Progress</h1>
+            <p className="text-muted-foreground">Understanding your patterns helps reduce gradually</p>
+          </div>
+
+          <EmptyState
+            image={emptyStateInsights}
+            title="No Data Yet"
+            description="Start tracking your sessions to see beautiful insights about your patterns, progress, and achievements."
+            actionText="Go to Home"
+            onAction={() => window.location.href = '/'}
+          />
+
+          <div className="mt-6 grid grid-cols-2 gap-4">
+            <Card className="p-4 shadow-elevated border-0 bg-card/80 backdrop-blur-sm text-center">
+              <div className="text-2xl mb-2">📊</div>
+              <h3 className="font-semibold text-sm mb-1">Weekly Charts</h3>
+              <p className="text-xs text-muted-foreground">Visual progress tracking</p>
+            </Card>
+            <Card className="p-4 shadow-elevated border-0 bg-card/80 backdrop-blur-sm text-center">
+              <div className="text-2xl mb-2">🎯</div>
+              <h3 className="font-semibold text-sm mb-1">Personal Insights</h3>
+              <p className="text-xs text-muted-foreground">Pattern recognition</p>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-calm pb-32">
