@@ -15,7 +15,7 @@ export default function Insights() {
 
   return (
     <div className="min-h-screen bg-gradient-calm pb-32">
-      <div className="px-6 pt-8">
+      <div className="px-6 pt-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-foreground mb-2">Your Progress</h1>
           <p className="text-muted-foreground">Understanding your patterns helps reduce gradually</p>

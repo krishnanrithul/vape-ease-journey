@@ -39,7 +39,7 @@ export default function TagSelection() {
 
   return (
     <div className="min-h-screen bg-gradient-calm pb-32">
-      <div className="px-6 pt-8">
+      <div className="px-6 pt-6">
         {/* Header */}
         <div className="flex items-center mb-6">
           <Button

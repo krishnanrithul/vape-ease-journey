@@ -29,7 +29,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-calm pb-32 font-inter">
       {/* Hero Section */}
-      <div className="px-6 pt-12 pb-8">
+      <div className="px-6 pt-6 pb-8">
         <div className="relative overflow-hidden rounded-3xl mb-8 shadow-elevated">
           <img 
             src={heroImage} 
