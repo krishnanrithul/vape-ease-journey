@@ -5,12 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { usePuffData } from '@/hooks/usePuffData';
+import { AchievementCard } from '@/components/AchievementCard';
+import { StreakCard } from '@/components/StreakCard';
 import { toast } from 'sonner';
 import heroImage from '@/assets/hero-illustration.jpg';
 
 export default function Home() {
   const navigate = useNavigate();
-  const { addPuff, getTodaysPuffs, dailyGoal } = usePuffData();
+  const { addPuff, getTodaysPuffs, dailyGoal, achievements, streakData, getStreakIcon, getStreakMessage } = usePuffData();
   const [quickCount, setQuickCount] = useState(1);
   
   const todaysPuffs = getTodaysPuffs();
@@ -127,6 +129,16 @@ export default function Home() {
             <Clock size={24} className="mb-2" />
             <span className="text-sm font-semibold">Delay Craving</span>
           </Button>
+        </div>
+
+        {/* Streak & Achievement Cards */}
+        <div className="grid grid-cols-1 gap-4 mb-6">
+          <StreakCard 
+            streakData={streakData}
+            getStreakIcon={getStreakIcon}
+            getStreakMessage={getStreakMessage}
+          />
+          <AchievementCard achievements={achievements} />
         </div>
       </div>
     </div>
