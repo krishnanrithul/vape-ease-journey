@@ -64,6 +64,28 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				}
 			},
+			fontFamily: {
+				'inter': ['Inter', 'system-ui', 'sans-serif'],
+				'sans': ['Inter', 'system-ui', 'sans-serif'],
+			},
+			fontSize: {
+				'xs': ['0.75rem', { lineHeight: '1rem', letterSpacing: '0.025em' }],
+				'sm': ['0.875rem', { lineHeight: '1.25rem', letterSpacing: '0.025em' }],
+				'base': ['1rem', { lineHeight: '1.5rem', letterSpacing: '0em' }],
+				'lg': ['1.125rem', { lineHeight: '1.75rem', letterSpacing: '-0.025em' }],
+				'xl': ['1.25rem', { lineHeight: '1.75rem', letterSpacing: '-0.025em' }],
+				'2xl': ['1.5rem', { lineHeight: '2rem', letterSpacing: '-0.025em' }],
+				'3xl': ['1.875rem', { lineHeight: '2.25rem', letterSpacing: '-0.025em' }],
+				'4xl': ['2.25rem', { lineHeight: '2.5rem', letterSpacing: '-0.025em' }],
+				'5xl': ['3rem', { lineHeight: '1', letterSpacing: '-0.025em' }],
+			},
+			letterSpacing: {
+				'tighter': '-0.05em',
+				'tight': '-0.025em',
+				'normal': '0em',
+				'wide': '0.025em',
+				'wider': '0.05em',
+			},
 			backgroundImage: {
 				'gradient-primary': 'var(--gradient-primary)',
 				'gradient-success': 'var(--gradient-success)',
@@ -72,12 +94,23 @@ export default {
 			},
 			boxShadow: {
 				'soft': 'var(--shadow-soft)',
+				'medium': 'var(--shadow-medium)',
+				'large': 'var(--shadow-large)',
 				'glow': 'var(--shadow-glow)',
-				'card': 'var(--shadow-card)'
+				'card': 'var(--shadow-card)',
+				'elevated': 'var(--shadow-elevated)',
+				'floating': 'var(--shadow-floating)',
+				'brutal': '0 0 0 1px hsl(var(--border)), var(--shadow-elevated)',
+			},
+			spacing: {
+				'18': '4.5rem',
+				'88': '22rem',
+				'128': '32rem',
 			},
 			transitionTimingFunction: {
 				'smooth': 'var(--transition-smooth)',
-				'gentle': 'var(--transition-gentle)'
+				'gentle': 'var(--transition-gentle)',
+				'bounce': 'var(--transition-bounce)',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

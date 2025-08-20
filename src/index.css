@@ -49,14 +49,35 @@ All colors MUST be HSL.
     --gradient-calm: linear-gradient(180deg, hsl(200 30% 98%), hsl(200 20% 95%));
     --gradient-accent: linear-gradient(135deg, hsl(260 60% 65%), hsl(280 60% 70%));
 
-    /* Elegant shadows */
-    --shadow-soft: 0 4px 20px -4px hsl(180 65% 45% / 0.15);
-    --shadow-glow: 0 0 30px hsl(180 75% 65% / 0.3);
-    --shadow-card: 0 2px 12px -2px hsl(200 15% 20% / 0.08);
+    /* Elegant shadows with depth */
+    --shadow-soft: 0 2px 8px -2px hsl(180 65% 45% / 0.12);
+    --shadow-medium: 0 4px 16px -4px hsl(180 65% 45% / 0.15);
+    --shadow-large: 0 8px 32px -8px hsl(180 65% 45% / 0.18);
+    --shadow-glow: 0 0 24px hsl(180 75% 65% / 0.4);
+    --shadow-card: 0 1px 3px hsl(200 15% 20% / 0.08), 0 1px 2px hsl(200 15% 20% / 0.12);
+    --shadow-elevated: 0 4px 12px hsl(200 15% 20% / 0.15), 0 2px 4px hsl(200 15% 20% / 0.12);
+    --shadow-floating: 0 8px 24px hsl(200 15% 20% / 0.15), 0 4px 8px hsl(200 15% 20% / 0.1);
 
     /* Smooth animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-gentle: all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1.0);
+    --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    /* Typography scale */
+    --text-xs: 0.75rem;     /* 12px */
+    --text-sm: 0.875rem;    /* 14px */
+    --text-base: 1rem;      /* 16px */
+    --text-lg: 1.125rem;    /* 18px */
+    --text-xl: 1.25rem;     /* 20px */
+    --text-2xl: 1.5rem;     /* 24px */
+    --text-3xl: 1.875rem;   /* 30px */
+    --text-4xl: 2.25rem;    /* 36px */
+    --text-5xl: 3rem;       /* 48px */
+
+    /* Letter spacing */
+    --tracking-tight: -0.025em;
+    --tracking-normal: 0em;
+    --tracking-wide: 0.025em;
 
     --radius: 0.5rem;
 
@@ -122,6 +143,28 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-inter antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+
+  h1 { @apply text-3xl lg:text-4xl; }
+  h2 { @apply text-2xl lg:text-3xl; }
+  h3 { @apply text-xl lg:text-2xl; }
+  h4 { @apply text-lg lg:text-xl; }
+  
+  p {
+    @apply leading-relaxed;
+  }
+
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent;
+  }
+
+  .shadow-brutal {
+    box-shadow: 0 0 0 1px hsl(var(--border)), var(--shadow-elevated);
   }
 }

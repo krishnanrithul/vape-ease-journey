@@ -9,25 +9,25 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-soft hover:shadow-medium",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-soft hover:shadow-medium",
         outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+          "border border-input bg-background hover:bg-accent hover:text-accent-foreground shadow-soft hover:shadow-medium",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-soft hover:shadow-medium",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        puff: "bg-gradient-primary text-primary-foreground hover:shadow-glow transform hover:scale-105 transition-gentle font-semibold shadow-soft h-16 w-16 rounded-full text-2xl",
-        calm: "bg-gradient-calm text-foreground border border-border hover:bg-muted/50 transition-smooth",
-        success: "bg-gradient-success text-secondary-foreground hover:shadow-soft transition-smooth",
-        accent: "bg-gradient-accent text-accent-foreground hover:shadow-glow transition-gentle",
+        puff: "bg-gradient-primary text-primary-foreground hover:shadow-glow transform hover:scale-105 transition-bounce font-bold shadow-medium rounded-2xl text-lg",
+        calm: "bg-gradient-calm text-foreground border border-border hover:bg-muted/50 transition-smooth shadow-soft hover:shadow-medium",
+        success: "bg-gradient-success text-secondary-foreground hover:shadow-medium transition-smooth shadow-soft",
+        accent: "bg-gradient-accent text-accent-foreground hover:shadow-glow transition-gentle shadow-soft",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10",
+        default: "h-11 px-6 py-2 font-medium",
+        sm: "h-9 rounded-md px-4 text-sm font-medium",
+        lg: "h-12 rounded-lg px-8 text-base font-semibold",
+        icon: "h-10 w-10 font-medium",
       },
     },
     defaultVariants: {
