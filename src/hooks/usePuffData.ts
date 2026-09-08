@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { safeParse, safeParseInt } from '@/lib/safeStorage';
 
 export interface PuffEntry {
   id: string;
@@ -36,29 +37,26 @@ export function usePuffData() {
 
   // Load data from localStorage on mount
   useEffect(() => {
-    const stored = localStorage.getItem('vape-puffs');
-    if (stored) {
-      const data = JSON.parse(stored);
-      setPuffs(data.map((p: any) => ({ ...p, timestamp: new Date(p.timestamp) })));
-    }
-    
-    const storedGoal = localStorage.getItem('daily-goal');
-    if (storedGoal) {
-      setDailyGoal(parseInt(storedGoal));
+    type StoredPuff = Omit<PuffEntry, 'timestamp'> & { timestamp: string };
+    const storedPuffs = safeParse<StoredPuff[]>('vape-puffs', []);
+    if (storedPuffs.length) {
+      setPuffs(storedPuffs.map(p => ({ ...p, timestamp: new Date(p.timestamp) })));
     }
 
-    const storedAchievements = localStorage.getItem('achievements');
-    if (storedAchievements) {
-      const data = JSON.parse(storedAchievements);
-      setAchievements(data.map((a: any) => ({ 
-        ...a, 
-        unlockedAt: a.unlockedAt ? new Date(a.unlockedAt) : undefined 
+    setDailyGoal(safeParseInt('daily-goal', 20));
+
+    type StoredAchievement = Omit<Achievement, 'unlockedAt'> & { unlockedAt?: string };
+    const storedAchievements = safeParse<StoredAchievement[]>('achievements', []);
+    if (storedAchievements.length) {
+      setAchievements(storedAchievements.map(a => ({
+        ...a,
+        unlockedAt: a.unlockedAt ? new Date(a.unlockedAt) : undefined
       })));
     }
 
-    const storedStreak = localStorage.getItem('streak-data');
+    const storedStreak = safeParse<StreakData | null>('streak-data', null);
     if (storedStreak) {
-      setStreakData(JSON.parse(storedStreak));
+      setStreakData(storedStreak);
     }
   }, []);
 
@@ -110,9 +108,20 @@ export function usePuffData() {
         case 'month-tracking':
           shouldUnlock = daysTracked >= 30;
           break;
-        case 'goal-met':
-          shouldUnlock = getTodaysPuffs() + newPuffCount <= dailyGoal;
+        case 'goal-met': {
+          // "Met your daily goal" = completed a full past day at or under the limit.
+          // Evaluated end-of-day, never on the current (still in-progress) day.
+          const today = new Date().toDateString();
+          const puffsByDay = new Map<string, number>();
+          puffs.forEach(p => {
+            const day = p.timestamp.toDateString();
+            puffsByDay.set(day, (puffsByDay.get(day) || 0) + p.count);
+          });
+          shouldUnlock = [...puffsByDay.entries()].some(
+            ([day, count]) => day !== today && count <= dailyGoal
+          );
           break;
+        }
         case 'streak-3':
           shouldUnlock = streakData.current >= 3;
           break;

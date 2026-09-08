@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/useTheme";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AppHeader } from "@/components/AppHeader";
 import Home from "./pages/Home";
 import Insights from "./pages/Insights";
@@ -22,21 +23,23 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <div className="min-h-screen w-full">
-            <AppHeader />
-            <main className="flex-1">
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/insights" element={<Insights />} />
-                <Route path="/goals" element={<Goals />} />
-                <Route path="/gamification" element={<Gamification />} />
-                <Route path="/delay" element={<CravingDelay />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </main>
-            <BottomNav />
-          </div>
+          <ErrorBoundary>
+            <div className="min-h-screen w-full">
+              <AppHeader />
+              <main className="flex-1">
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/insights" element={<Insights />} />
+                  <Route path="/goals" element={<Goals />} />
+                  <Route path="/gamification" element={<Gamification />} />
+                  <Route path="/delay" element={<CravingDelay />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </main>
+              <BottomNav />
+            </div>
+          </ErrorBoundary>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

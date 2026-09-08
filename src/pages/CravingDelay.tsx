@@ -25,36 +25,37 @@ export default function CravingDelay() {
   const [selectedMinutes, setSelectedMinutes] = useState(5);
   const [isActive, setIsActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [isComplete, setIsComplete] = useState(false);
   const [quote, setQuote] = useState('');
 
   useEffect(() => {
     setQuote(MOTIVATIONAL_QUOTES[Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length)]);
   }, [selectedMinutes]);
 
+  // Tick down once per second while running. The updater stays pure.
   useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
+    if (!isActive || timeLeft <= 0) return;
 
-    if (isActive && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft(time => {
-          if (time <= 1) {
-            setIsActive(false);
-            toast.success('Great job! You made it through the craving', {
-              description: 'Consider if you still want to vape, or if the feeling has passed'
-            });
-            return 0;
-          }
-          return time - 1;
-        });
-      }, 1000);
+    const timeout = setTimeout(() => {
+      setTimeLeft(time => Math.max(0, time - 1));
+    }, 1000);
+
+    return () => clearTimeout(timeout);
+  }, [isActive, timeLeft]);
+
+  // Handle completion as its own effect so the "Delay Complete" screen persists.
+  useEffect(() => {
+    if (isActive && timeLeft === 0) {
+      setIsActive(false);
+      setIsComplete(true);
+      toast.success('Great job! You made it through the craving', {
+        description: 'Consider if you still want to vape, or if the feeling has passed'
+      });
     }
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
   }, [isActive, timeLeft]);
 
   const startTimer = () => {
+    setIsComplete(false);
     setTimeLeft(selectedMinutes * 60);
     setIsActive(true);
   };
@@ -65,6 +66,7 @@ export default function CravingDelay() {
 
   const resetTimer = () => {
     setIsActive(false);
+    setIsComplete(false);
     setTimeLeft(0);
   };
 
@@ -84,7 +86,7 @@ export default function CravingDelay() {
           <p className="text-muted-foreground">Wait it out - cravings are temporary</p>
         </div>
 
-        {!isActive && timeLeft === 0 && (
+        {!isActive && !isComplete && timeLeft === 0 && (
           <>
             {/* Duration Selection */}
             <Card className="p-6 mb-6 shadow-card">
@@ -126,7 +128,7 @@ export default function CravingDelay() {
           </>
         )}
 
-        {(isActive || timeLeft > 0) && (
+        {(isActive || (timeLeft > 0 && !isComplete)) && (
           <Card className="p-8 shadow-card text-center">
             {/* Timer Display */}
             <div className="mb-6">
@@ -165,16 +167,35 @@ export default function CravingDelay() {
                 Reset
               </Button>
             </div>
+          </Card>
+        )}
 
-            {timeLeft === 0 && (
-              <div className="mt-6 p-4 bg-secondary/10 rounded-lg">
-                <CheckCircle size={32} className="mx-auto mb-2 text-secondary" />
-                <p className="font-semibold text-secondary">Delay Complete!</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  How are you feeling now?
-                </p>
-              </div>
-            )}
+        {isComplete && (
+          <Card className="p-8 shadow-card text-center">
+            <div className="mb-6 p-4 bg-secondary/10 rounded-lg">
+              <CheckCircle size={32} className="mx-auto mb-2 text-secondary" />
+              <p className="font-semibold text-secondary">Delay Complete!</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                How are you feeling now? The craving may have already passed.
+              </p>
+            </div>
+
+            <div className="mb-8 p-4 bg-muted/50 rounded-lg">
+              <p className="text-lg font-medium text-foreground italic">
+                "{quote}"
+              </p>
+            </div>
+
+            <div className="flex gap-3 justify-center">
+              <Button variant="success" onClick={startTimer}>
+                <Play size={16} className="mr-2" />
+                Start another delay
+              </Button>
+              <Button variant="outline" onClick={resetTimer}>
+                <RotateCcw size={16} className="mr-2" />
+                Done
+              </Button>
+            </div>
           </Card>
         )}
       </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Minus, Plus, Target, TrendingDown, Trophy, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -11,9 +11,9 @@ import { CreateGoalDialog } from '@/components/CreateGoalDialog';
 import { toast } from 'sonner';
 
 export default function Goals() {
-  const { dailyGoal, setDailyGoal, getTodaysPuffs, getWeeklyData, streakData } = usePuffData();
-  const { 
-    goals, 
+  const { dailyGoal, setDailyGoal, getTodaysPuffs, getWeeklyData, streakData, puffs } = usePuffData();
+  const {
+    goals,
     milestones,
     userLevel,
     experiencePoints,
@@ -30,31 +30,44 @@ export default function Goals() {
   } = useAdvancedGoals();
   
   const [newGoal, setNewGoal] = useState(dailyGoal);
-  
+
   const todaysPuffs = getTodaysPuffs();
-  const weeklyData = getWeeklyData();
-  const weekAvg = Math.round(weeklyData.reduce((sum, day) => sum + day.puffs, 0) / 7);
+  // Memoize so the array reference is stable across renders — otherwise the
+  // progress-sync effect below fires every render and loops.
+  const weeklyData = useMemo(() => getWeeklyData(), [puffs]);
+  const weeklyTotal = useMemo(
+    () => weeklyData.reduce((sum, day) => sum + day.puffs, 0),
+    [weeklyData]
+  );
+  const weekAvg = Math.round(weeklyTotal / 7);
   const progressPercent = Math.min((todaysPuffs / dailyGoal) * 100, 100);
 
-  // Update goal progress and check milestones
+  // Sync progress for every active goal (built-in and custom) and check milestones.
   useEffect(() => {
-    // Update daily goal progress
-    const dailyGoalId = goals.find(g => g.id === 'daily-reduction')?.id;
-    if (dailyGoalId) {
-      updateGoalProgress(dailyGoalId, todaysPuffs);
-    }
+    goals.forEach(goal => {
+      if (!goal.isActive || goal.completedAt) return;
 
-    // Update weekly goal progress
-    const weeklyGoalId = goals.find(g => g.id === 'weekly-reduction')?.id;
-    if (weeklyGoalId) {
-      const weeklyTotal = weeklyData.reduce((sum, day) => sum + day.puffs, 0);
-      updateGoalProgress(weeklyGoalId, weeklyTotal);
-    }
+      let progress: number;
+      if (goal.period === 'day') {
+        progress = todaysPuffs;
+      } else if (goal.period === 'week') {
+        progress = weeklyTotal;
+      } else if (goal.category === 'streak') {
+        progress = streakData.current;
+      } else {
+        // month/custom periods have no automatic data source yet — leave as-is.
+        progress = goal.current;
+      }
 
-    // Check milestones
-    const reductionPercent = weekAvg > 0 ? Math.max(0, ((weekAvg - todaysPuffs) / weekAvg) * 100) : 0;
+      updateGoalProgress(goal.id, progress);
+    });
+
+    const reductionPercent =
+      weekAvg > 0 ? Math.max(0, ((weekAvg - todaysPuffs) / weekAvg) * 100) : 0;
     checkMilestones(streakData.current, reductionPercent);
-  }, [todaysPuffs, weeklyData, streakData.current]);
+    // updateGoalProgress / checkMilestones are no-ops when nothing changed, so
+    // depending on `goals` here is safe (state stays referentially equal).
+  }, [todaysPuffs, weeklyTotal, weekAvg, streakData.current, goals]);
 
   const activeGoals = getActiveGoals();
   const completedGoals = getCompletedGoals();

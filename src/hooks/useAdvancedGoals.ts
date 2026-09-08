@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { safeParse } from '@/lib/safeStorage';
 
 export interface Goal {
   id: string;
@@ -12,11 +13,38 @@ export interface Goal {
   endDate?: Date;
   category: 'reduction' | 'streak' | 'mindfulness' | 'milestone';
   difficulty: 'easy' | 'medium' | 'hard';
+  /**
+   * 'decrease' = stay at or under the target for the period (recurring limit).
+   * 'increase' = reach or exceed the target (one-off achievement).
+   */
+  direction: 'increase' | 'decrease';
   reward?: string;
   isActive: boolean;
   completedAt?: Date;
   icon: string;
+  /** Period bucket the `current` value belongs to (day/week key). */
+  periodKey?: string;
+  /** Last period bucket already scored for a 'decrease' goal. */
+  lastEvaluatedKey?: string;
 }
+
+const getDayKey = (d = new Date()) => d.toDateString();
+
+const getWeekKey = (d = new Date()) => {
+  const firstOfYear = new Date(d.getFullYear(), 0, 1);
+  const days = Math.floor((d.getTime() - firstOfYear.getTime()) / 86400000);
+  const week = Math.floor((days + firstOfYear.getDay()) / 7);
+  return `${d.getFullYear()}-W${week}`;
+};
+
+const periodKeyFor = (period: Goal['period'], existing?: string) => {
+  if (period === 'day') return getDayKey();
+  if (period === 'week') return getWeekKey();
+  return existing ?? getDayKey();
+};
+
+const inferDirection = (category?: Goal['category']): Goal['direction'] =>
+  category === 'reduction' ? 'decrease' : 'increase';
 
 export interface Milestone {
   id: string;
@@ -37,11 +65,17 @@ export function useAdvancedGoals() {
   const [experiencePoints, setExperiencePoints] = useState(0);
 
   useEffect(() => {
-    const storedGoals = localStorage.getItem('advanced-goals');
+    type StoredGoal = Omit<Goal, 'startDate' | 'endDate' | 'completedAt' | 'direction'> & {
+      startDate: string;
+      endDate?: string;
+      completedAt?: string;
+      direction?: Goal['direction'];
+    };
+    const storedGoals = safeParse<StoredGoal[] | null>('advanced-goals', null);
     if (storedGoals) {
-      const data = JSON.parse(storedGoals);
-      setGoals(data.map((g: any) => ({
+      setGoals(storedGoals.map(g => ({
         ...g,
+        direction: g.direction ?? inferDirection(g.category),
         startDate: new Date(g.startDate),
         endDate: g.endDate ? new Date(g.endDate) : undefined,
         completedAt: g.completedAt ? new Date(g.completedAt) : undefined
@@ -60,6 +94,7 @@ export function useAdvancedGoals() {
           startDate: new Date(),
           category: 'reduction' as const,
           difficulty: 'medium' as const,
+          direction: 'decrease' as const,
           isActive: true,
           icon: '🎯'
         },
@@ -74,6 +109,7 @@ export function useAdvancedGoals() {
           startDate: new Date(),
           category: 'reduction' as const,
           difficulty: 'medium' as const,
+          direction: 'decrease' as const,
           isActive: true,
           icon: '📈'
         }
@@ -81,10 +117,10 @@ export function useAdvancedGoals() {
       setGoals(defaultGoals);
     }
 
-    const storedMilestones = localStorage.getItem('milestones');
+    type StoredMilestone = Omit<Milestone, 'completedAt'> & { completedAt?: string };
+    const storedMilestones = safeParse<StoredMilestone[] | null>('milestones', null);
     if (storedMilestones) {
-      const data = JSON.parse(storedMilestones);
-      setMilestones(data.map((m: any) => ({
+      setMilestones(storedMilestones.map(m => ({
         ...m,
         completedAt: m.completedAt ? new Date(m.completedAt) : undefined
       })));
@@ -125,11 +161,13 @@ export function useAdvancedGoals() {
       setMilestones(defaultMilestones);
     }
 
-    const storedUserData = localStorage.getItem('user-progress');
+    const storedUserData = safeParse<{ level?: number; experiencePoints?: number } | null>(
+      'user-progress',
+      null
+    );
     if (storedUserData) {
-      const data = JSON.parse(storedUserData);
-      setUserLevel(data.level || 1);
-      setExperiencePoints(data.experiencePoints || 0);
+      setUserLevel(storedUserData.level || 1);
+      setExperiencePoints(storedUserData.experiencePoints || 0);
     }
   }, []);
 
@@ -161,6 +199,7 @@ export function useAdvancedGoals() {
       endDate: goalData.endDate,
       category: goalData.category || 'mindfulness',
       difficulty: goalData.difficulty || 'medium',
+      direction: goalData.direction ?? inferDirection(goalData.category),
       isActive: true,
       icon: goalData.icon || '⭐',
       ...goalData
@@ -170,46 +209,74 @@ export function useAdvancedGoals() {
     return newGoal;
   };
 
-  const updateGoalProgress = (goalId: string, progress: number) => {
-    setGoals(prev => prev.map(goal => {
-      if (goal.id === goalId) {
-        const updatedGoal = { ...goal, current: progress };
-        
-        // Check if goal is completed
-        if (progress >= goal.target && !goal.completedAt) {
-          updatedGoal.completedAt = new Date();
-          
-          // Award experience points based on difficulty
-          const points = goal.difficulty === 'hard' ? 150 : goal.difficulty === 'medium' ? 100 : 50;
-          setExperiencePoints(prev => {
-            const newTotal = prev + points;
-            const newLevel = Math.floor(newTotal / 500) + 1;
-            if (newLevel > userLevel) {
-              setUserLevel(newLevel);
-              // Show level up notification
-              import('sonner').then(({ toast }) => {
-                toast.success(`Level Up! You're now level ${newLevel}!`, {
-                  description: 'Your dedication is paying off!',
-                  duration: 5000
-                });
-              });
-            }
-            return newTotal;
+  const awardXp = (difficulty: Goal['difficulty']) => {
+    const points = difficulty === 'hard' ? 150 : difficulty === 'medium' ? 100 : 50;
+    setExperiencePoints(prev => {
+      const newTotal = prev + points;
+      const newLevel = Math.floor(newTotal / 500) + 1;
+      if (newLevel > userLevel) {
+        setUserLevel(newLevel);
+        import('sonner').then(({ toast }) => {
+          toast.success(`Level Up! You're now level ${newLevel}!`, {
+            description: 'Your dedication is paying off!',
+            duration: 5000
           });
-          
-          // Show completion notification
+        });
+      }
+      return newTotal;
+    });
+    return points;
+  };
+
+  const updateGoalProgress = (goalId: string, progress: number) => {
+    setGoals(prev => {
+      const goal = prev.find(g => g.id === goalId);
+      if (!goal) return prev;
+
+      const key = periodKeyFor(goal.period, goal.periodKey);
+      const rolledOver = goal.periodKey !== undefined && goal.periodKey !== key;
+
+      // No-op guard: keep the same array reference so effects that read `goals`
+      // don't re-run in a loop when nothing actually changed.
+      if (!rolledOver && goal.current === progress && goal.periodKey === key) {
+        return prev;
+      }
+
+      return prev.map(g => {
+        if (g.id !== goalId) return g;
+
+        const next: Goal = { ...g, current: progress, periodKey: key };
+
+        // Recurring "stay under the limit" goals: score the finished period once.
+        if (rolledOver && g.direction === 'decrease') {
+          const succeeded = g.current <= g.target;
+          if (succeeded && g.lastEvaluatedKey !== g.periodKey) {
+            next.lastEvaluatedKey = g.periodKey;
+            const points = awardXp(g.difficulty);
+            import('sonner').then(({ toast }) => {
+              toast.success(
+                `You stayed under your ${g.period === 'day' ? 'daily' : 'weekly'} limit!`,
+                { description: `You earned ${points} XP!`, duration: 4000 }
+              );
+            });
+          }
+        }
+
+        // One-off "reach the target" goals complete as soon as they hit it.
+        if (g.direction === 'increase' && !g.completedAt && progress >= g.target) {
+          next.completedAt = new Date();
+          const points = awardXp(g.difficulty);
           import('sonner').then(({ toast }) => {
-            toast.success(`Goal Completed: ${goal.title}!`, {
+            toast.success(`Goal Completed: ${g.title}!`, {
               description: `You earned ${points} XP!`,
               duration: 4000
             });
           });
         }
-        
-        return updatedGoal;
-      }
-      return goal;
-    }));
+
+        return next;
+      });
+    });
   };
 
   const toggleGoal = (goalId: string) => {

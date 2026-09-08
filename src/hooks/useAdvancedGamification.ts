@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { safeParse, safeParseInt } from '@/lib/safeStorage';
 
 export interface Badge {
   id: string;
@@ -240,10 +241,10 @@ export function useAdvancedGamification() {
     ];
 
     // Load from localStorage or use defaults
-    const storedBadges = localStorage.getItem('gamification-badges');
+    type StoredBadge = Omit<Badge, 'unlockedAt'> & { unlockedAt?: string };
+    const storedBadges = safeParse<StoredBadge[] | null>('gamification-badges', null);
     if (storedBadges) {
-      const data = JSON.parse(storedBadges);
-      setBadges(data.map((b: any) => ({
+      setBadges(storedBadges.map(b => ({
         ...b,
         unlockedAt: b.unlockedAt ? new Date(b.unlockedAt) : undefined
       })));
@@ -251,24 +252,13 @@ export function useAdvancedGamification() {
       setBadges(defaultBadges);
     }
 
-    const storedMultipliers = localStorage.getItem('streak-multipliers');
-    if (storedMultipliers) {
-      setStreakMultipliers(JSON.parse(storedMultipliers));
-    } else {
-      setStreakMultipliers(defaultMultipliers);
-    }
+    const storedMultipliers = safeParse<StreakMultiplier[] | null>('streak-multipliers', null);
+    setStreakMultipliers(storedMultipliers ?? defaultMultipliers);
 
-    const storedProgressTree = localStorage.getItem('progress-tree');
-    if (storedProgressTree) {
-      setProgressTree(JSON.parse(storedProgressTree));
-    } else {
-      setProgressTree(defaultProgressTree);
-    }
+    const storedProgressTree = safeParse<ProgressNode[] | null>('progress-tree', null);
+    setProgressTree(storedProgressTree ?? defaultProgressTree);
 
-    const storedPoints = localStorage.getItem('total-gamification-points');
-    if (storedPoints) {
-      setTotalPoints(parseInt(storedPoints));
-    }
+    setTotalPoints(safeParseInt('total-gamification-points', 0));
   }, []);
 
   useEffect(() => {
