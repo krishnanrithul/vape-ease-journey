@@ -29,11 +29,50 @@ export interface DailyStats {
   puffs: number;
 }
 
+const dayKey = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+const addDays = (d: Date, n: number) => {
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  x.setDate(x.getDate() + n);
+  return x;
+};
+
+/** Current streak (ending today or yesterday) and longest-ever run of consecutive tracked days. */
+export function computeStreaks(entries: PuffEntry[]): { current: number; longest: number } {
+  const days = new Set(entries.map(p => dayKey(p.timestamp)));
+  if (days.size === 0) return { current: 0, longest: 0 };
+
+  const sorted = [...days].sort();
+  let longest = 1;
+  let run = 1;
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = new Date(sorted[i - 1]);
+    const cur = new Date(sorted[i]);
+    const diff = Math.round((cur.getTime() - prev.getTime()) / 86400000);
+    run = diff === 1 ? run + 1 : 1;
+    longest = Math.max(longest, run);
+  }
+
+  const today = new Date();
+  let cursor = days.has(dayKey(today)) ? today : days.has(dayKey(addDays(today, -1))) ? addDays(today, -1) : null;
+  let current = 0;
+  while (cursor && days.has(dayKey(cursor))) {
+    current++;
+    cursor = addDays(cursor, -1);
+  }
+  return { current, longest };
+}
+
 export function usePuffData() {
   const [puffs, setPuffs] = useState<PuffEntry[]>([]);
   const [dailyGoal, setDailyGoal] = useState(20);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [streakData, setStreakData] = useState<StreakData>({ current: 0, longest: 0 });
+  const [baseline, setBaselineState] = useState<number | null>(null);
+  const [hydrated, setHydrated] = useState(false);
+  // bumped when the tab becomes visible again so "today" derived values refresh after midnight
+  const [, setTick] = useState(0);
 
   // Load data from localStorage on mount
   useEffect(() => {
@@ -58,25 +97,50 @@ export function usePuffData() {
     if (storedStreak) {
       setStreakData(storedStreak);
     }
+
+    const storedBaseline = safeParseInt('baseline-puffs', 0);
+    if (storedBaseline > 0) setBaselineState(storedBaseline);
+
+    setHydrated(true);
+  }, []);
+
+  // Recompute streak / today when the app comes back to the foreground (day rollover).
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') setTick(t => t + 1);
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
   }, []);
 
   // Save data to localStorage when it changes
   useEffect(() => {
+    if (!hydrated) return;
     localStorage.setItem('vape-puffs', JSON.stringify(puffs));
     updateStreak();
-  }, [puffs]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [puffs, hydrated]);
 
   useEffect(() => {
+    if (!hydrated) return;
     localStorage.setItem('daily-goal', dailyGoal.toString());
-  }, [dailyGoal]);
+  }, [dailyGoal, hydrated]);
 
   useEffect(() => {
+    if (!hydrated) return;
     localStorage.setItem('achievements', JSON.stringify(achievements));
-  }, [achievements]);
+  }, [achievements, hydrated]);
 
   useEffect(() => {
+    if (!hydrated) return;
     localStorage.setItem('streak-data', JSON.stringify(streakData));
-  }, [streakData]);
+  }, [streakData, hydrated]);
+
+  const setBaseline = (value: number | null) => {
+    setBaselineState(value);
+    if (value && value > 0) localStorage.setItem('baseline-puffs', String(value));
+    else localStorage.removeItem('baseline-puffs');
+  };
 
   const checkAchievements = (newPuffCount: number) => {
     const today = new Date().toDateString();
@@ -146,45 +210,15 @@ export function usePuffData() {
   };
 
   const updateStreak = () => {
-    if (puffs.length === 0) return;
-
-    const today = new Date().toDateString();
-    const yesterday = new Date(Date.now() - 86400000).toDateString();
-    
-    // Get unique days with puffs
-    const uniqueDays = [...new Set(puffs.map(p => p.timestamp.toDateString()))].sort();
-    
-    if (uniqueDays.length === 0) return;
-
-    let currentStreak = 0;
-    let maxStreak = 0;
-    let tempStreak = 0;
-
-    // Calculate streaks
-    for (let i = uniqueDays.length - 1; i >= 0; i--) {
-      const currentDay = new Date(uniqueDays[i]);
-      const nextDay = i < uniqueDays.length - 1 ? new Date(uniqueDays[i + 1]) : new Date();
-      
-      const dayDiff = Math.floor((nextDay.getTime() - currentDay.getTime()) / (1000 * 60 * 60 * 24));
-      
-      if (dayDiff <= 1 || i === uniqueDays.length - 1) {
-        tempStreak++;
-        if (uniqueDays[i] === today || uniqueDays[i] === yesterday) {
-          currentStreak = tempStreak;
-        }
-      } else {
-        maxStreak = Math.max(maxStreak, tempStreak);
-        tempStreak = 1;
-      }
-    }
-    
-    maxStreak = Math.max(maxStreak, tempStreak);
-    
-    setStreakData(prev => ({
-      current: currentStreak,
-      longest: Math.max(prev.longest, maxStreak),
-      lastActiveDate: today
-    }));
+    const { current, longest } = computeStreaks(puffs);
+    setStreakData(prev => {
+      const next = {
+        current,
+        longest: Math.max(prev.longest, longest),
+        lastActiveDate: new Date().toDateString(),
+      };
+      return prev.current === next.current && prev.longest === next.longest ? prev : next;
+    });
   };
 
   const addPuff = (count: number = 1, trigger?: string, mood?: string) => {
@@ -202,6 +236,37 @@ export function usePuffData() {
 
   const removePuff = (id: string) => {
     setPuffs(prev => prev.filter(p => p.id !== id));
+  };
+
+  /** Re-insert a previously deleted entry with its original timestamp (undo). */
+  const restorePuff = (entry: PuffEntry) => {
+    setPuffs(prev => (prev.some(p => p.id === entry.id) ? prev : [entry, ...prev]));
+  };
+
+  const updatePuff = (id: string, count: number) => {
+    const safe = Math.max(1, Math.min(200, Math.round(count)));
+    setPuffs(prev => prev.map(p => (p.id === id ? { ...p, count: safe } : p)));
+  };
+
+  /** Everything the app stores, as a JSON string (for export/backup). */
+  const exportData = () => {
+    const data: Record<string, unknown> = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key) continue;
+      const raw = localStorage.getItem(key);
+      try {
+        data[key] = raw ? JSON.parse(raw) : raw;
+      } catch {
+        data[key] = raw;
+      }
+    }
+    return JSON.stringify({ app: 'VapeWise', exportedAt: new Date().toISOString(), data }, null, 2);
+  };
+
+  /** Wipes all app data. Caller should reload so every hook re-hydrates. */
+  const clearAllData = () => {
+    localStorage.clear();
   };
 
   const getTodaysPuffs = () => {
@@ -273,8 +338,15 @@ export function usePuffData() {
 
   return {
     puffs,
+    hydrated,
     addPuff,
     removePuff,
+    restorePuff,
+    updatePuff,
+    baseline,
+    setBaseline,
+    exportData,
+    clearAllData,
     getTodaysPuffs,
     getWeeklyData,
     getInsight,

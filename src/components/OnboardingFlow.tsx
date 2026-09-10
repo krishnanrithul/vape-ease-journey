@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { ArrowRight, ArrowLeft, Check } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Check, Minus, Plus } from 'lucide-react';
+import { AnimatedNumber } from '@/components/motion-primitives/animated-number';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import onboardingWelcome from '@/assets/onboarding-welcome.jpg';
 
 interface OnboardingFlowProps {
-  onComplete: () => void;
+  /** `baseline` is the user's estimated puffs/day; undefined if skipped. */
+  onComplete: (baseline?: number) => void;
 }
 
 const ONBOARDING_STEPS = [
@@ -44,6 +46,13 @@ const ONBOARDING_STEPS = [
     ]
   },
   {
+    id: 'baseline',
+    title: 'Where are you starting from?',
+    subtitle: 'Roughly how many puffs a day right now?',
+    description: "A rough guess is fine. We'll set your first daily goal about 10% below this so it feels achievable.",
+    icon: '🎯'
+  },
+  {
     id: 'ready',
     title: "You're All Set!",
     subtitle: 'Start your mindful journey',
@@ -55,12 +64,14 @@ const ONBOARDING_STEPS = [
 
 export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const [currentStep, setCurrentStep] = useState(0);
+  const [baseline, setBaseline] = useState(20);
   const step = ONBOARDING_STEPS[currentStep];
   const isLastStep = currentStep === ONBOARDING_STEPS.length - 1;
+  const suggestedGoal = Math.max(1, Math.round(baseline * 0.9));
 
   const handleNext = () => {
     if (isLastStep) {
-      onComplete();
+      onComplete(baseline);
     } else {
       setCurrentStep(prev => prev + 1);
     }
@@ -117,6 +128,41 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             {step.description}
           </p>
 
+          {/* Baseline stepper */}
+          {step.id === 'baseline' && (
+            <div className="mb-6">
+              <div className="flex items-center justify-center gap-6 py-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-12 w-12 rounded-full"
+                  onClick={() => setBaseline(b => Math.max(1, b - (b > 30 ? 5 : 1)))}
+                  aria-label="Decrease"
+                >
+                  <Minus size={20} />
+                </Button>
+                <AnimatedNumber
+                  value={baseline}
+                  className="num text-6xl font-bold w-28 text-center"
+                  springOptions={{ bounce: 0, duration: 300 }}
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-12 w-12 rounded-full"
+                  onClick={() => setBaseline(b => Math.min(200, b + (b >= 30 ? 5 : 1)))}
+                  aria-label="Increase"
+                >
+                  <Plus size={20} />
+                </Button>
+              </div>
+              <p className="label-meta mt-1">puffs per day</p>
+              <p className="mt-4 text-sm text-muted-foreground">
+                First daily goal: <span className="num font-semibold text-foreground">{suggestedGoal}</span>
+              </p>
+            </div>
+          )}
+
           {/* Features List */}
           {step.features && (
             <div className="space-y-3 mb-6">
@@ -145,9 +191,9 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           </Button>
 
           <Button
-            variant={isLastStep ? 'success' : 'default'}
+            variant="default"
             onClick={handleNext}
-            className="shadow-md hover:shadow-md"
+            className=""
           >
             {step.cta || 'Continue'}
             {!isLastStep && <ArrowRight size={16} className="ml-2" />}
@@ -159,7 +205,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           <div className="text-center mt-4">
             <Button
               variant="link"
-              onClick={onComplete}
+              onClick={() => onComplete()}
               className="text-xs text-muted-foreground hover:text-foreground"
             >
               Skip for now

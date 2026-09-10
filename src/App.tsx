@@ -12,6 +12,8 @@ import Insights from "./pages/Insights";
 import Goals from "./pages/Goals";
 import Gamification from "./pages/Gamification";
 import CravingDelay from "./pages/CravingDelay";
+import Settings from "./pages/Settings";
+import History from "./pages/History";
 import NotFound from "./pages/NotFound";
 import { BottomNav } from "./components/BottomNav";
 
@@ -35,6 +37,8 @@ function AnimatedRoutes() {
           <Route path="/goals" element={<Goals />} />
           <Route path="/gamification" element={<Gamification />} />
           <Route path="/delay" element={<CravingDelay />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/history" element={<History />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

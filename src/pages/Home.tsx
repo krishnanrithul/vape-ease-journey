@@ -18,7 +18,7 @@ import emptyStateTracking from '@/assets/empty-state-tracking.jpg';
 
 export default function Home() {
   const navigate = useNavigate();
-  const { addPuff, removePuff, getTodaysPuffs, dailyGoal, achievements, streakData, getStreakIcon, getStreakMessage, puffs } = usePuffData();
+  const { addPuff, removePuff, getTodaysPuffs, dailyGoal, setDailyGoal, setBaseline, achievements, streakData, getStreakIcon, getStreakMessage, puffs } = usePuffData();
   const MAX_QUICK_COUNT = 20;
   const { hasSeenOnboarding, completeOnboarding } = useOnboarding();
   const [quickCount, setQuickCount] = useState(1);
@@ -30,7 +30,17 @@ export default function Home() {
 
   // Show onboarding for first-time users
   if (hasSeenOnboarding === false) {
-    return <OnboardingFlow onComplete={completeOnboarding} />;
+    return (
+      <OnboardingFlow
+        onComplete={(baseline) => {
+          if (baseline && baseline > 0) {
+            setBaseline(baseline);
+            setDailyGoal(Math.max(1, Math.round(baseline * 0.9)));
+          }
+          completeOnboarding();
+        }}
+      />
+    );
   }
 
   // Show loading state while checking onboarding status
@@ -138,6 +148,12 @@ export default function Home() {
           <Plus size={18} className="mr-2" />
           Log puffs
         </Button>
+        <button
+          onClick={() => navigate('/history')}
+          className="w-full -mt-3 text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          View log history →
+        </button>
 
         <Drawer open={logOpen} onOpenChange={setLogOpen}>
           <DrawerContent>

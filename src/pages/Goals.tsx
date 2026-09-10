@@ -11,7 +11,7 @@ import { CreateGoalDialog } from '@/components/CreateGoalDialog';
 import { toast } from 'sonner';
 
 export default function Goals() {
-  const { dailyGoal, setDailyGoal, getTodaysPuffs, getWeeklyData, streakData, puffs } = usePuffData();
+  const { dailyGoal, setDailyGoal, getTodaysPuffs, getWeeklyData, streakData, puffs, baseline } = usePuffData();
   const {
     goals,
     milestones,
@@ -39,7 +39,8 @@ export default function Goals() {
     () => weeklyData.reduce((sum, day) => sum + day.puffs, 0),
     [weeklyData]
   );
-  const weekAvg = Math.round(weeklyTotal / 7);
+  const trackedDays = weeklyData.filter(d => d.puffs > 0).length;
+  const weekAvg = trackedDays > 0 ? Math.round(weeklyTotal / trackedDays) : 0;
   const progressPercent = Math.min((todaysPuffs / dailyGoal) * 100, 100);
 
   // Sync progress for every active goal (built-in and custom) and check milestones.
@@ -62,12 +63,14 @@ export default function Goals() {
       updateGoalProgress(goal.id, progress);
     });
 
-    const reductionPercent =
-      weekAvg > 0 ? Math.max(0, ((weekAvg - todaysPuffs) / weekAvg) * 100) : 0;
+    // Reduction vs. the onboarding baseline (falls back to "today vs week avg" if none was set).
+    const reductionPercent = baseline && baseline > 0
+      ? (trackedDays >= 3 ? Math.max(0, ((baseline - weekAvg) / baseline) * 100) : 0)
+      : (weekAvg > 0 ? Math.max(0, ((weekAvg - todaysPuffs) / weekAvg) * 100) : 0);
     checkMilestones(streakData.current, reductionPercent);
     // updateGoalProgress / checkMilestones are no-ops when nothing changed, so
     // depending on `goals` here is safe (state stays referentially equal).
-  }, [todaysPuffs, weeklyTotal, weekAvg, streakData.current, goals]);
+  }, [todaysPuffs, weeklyTotal, weekAvg, trackedDays, baseline, streakData.current, goals]);
 
   const activeGoals = getActiveGoals();
   const completedGoals = getCompletedGoals();
