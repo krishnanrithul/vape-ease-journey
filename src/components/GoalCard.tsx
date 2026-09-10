@@ -30,23 +30,23 @@ export function GoalCard({ goal, onToggle, onDelete }: GoalCardProps) {
   const getCategoryColor = (category: string) => {
     switch (category) {
       case 'reduction': return 'bg-primary/20 text-primary-foreground border-primary/30';
-      case 'streak': return 'bg-accent/20 text-accent-foreground border-accent/30';
+      case 'streak': return 'bg-primary/15 text-primary border-primary/30';
       case 'mindfulness': return 'bg-secondary/20 text-secondary-foreground border-secondary/30';
-      case 'milestone': return 'bg-gradient-success/20 text-green-700 border-green-200';
+      case 'milestone': return 'bg-secondary/15 text-green-700 border-green-200';
       default: return 'bg-muted/20 text-muted-foreground border-muted/30';
     }
   };
 
   return (
-    <Card className={`p-6 shadow-elevated border-0 backdrop-blur-sm transition-all duration-300 ${
-      isCompleted ? 'bg-gradient-success/10 border-green-200/50' : 
-      goal.isActive ? 'bg-card/80' : 'bg-muted/30'
+    <Card className={`p-6 shadow-sm border border-border transition-all duration-300 ${
+      isCompleted ? 'bg-secondary/10 border-green-200/50' : 
+      goal.isActive ? 'bg-card' : 'bg-muted/30'
     }`}>
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
           <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-            isCompleted ? 'bg-gradient-success' : 'bg-gradient-primary'
-          } shadow-soft`}>
+            isCompleted ? 'bg-secondary' : 'bg-primary'
+          } shadow-sm`}>
             {isCompleted ? (
               <CheckCircle2 size={24} className="text-white" />
             ) : (
@@ -137,7 +137,7 @@ export function GoalCard({ goal, onToggle, onDelete }: GoalCardProps) {
 
         {/* Reward */}
         {goal.reward && (
-          <div className="text-xs bg-gradient-accent/10 border border-accent/20 rounded-lg p-3">
+          <div className="text-xs bg-accent/50 border border-accent/20 rounded-lg p-3">
             <span className="font-medium text-accent-foreground">Reward:</span> {goal.reward}
           </div>
         )}

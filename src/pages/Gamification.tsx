@@ -86,7 +86,7 @@ export default function Gamification() {
   const currentMultiplier = calculateTotalMultiplier();
 
   return (
-    <div className="min-h-screen bg-gradient-calm pb-32">
+    <div className="min-h-screen bg-background pb-32">
       <div className="px-6 pt-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-foreground mb-2">Gamification</h1>
@@ -95,25 +95,25 @@ export default function Gamification() {
 
         {/* Stats Overview */}
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <Card className="p-4 shadow-elevated border-0 bg-gradient-primary/5 backdrop-blur-sm">
+          <Card className="p-4 shadow-sm border border-border bg-muted/40">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
                 <Star className="text-white" size={20} />
               </div>
               <div>
-                <div className="text-2xl font-bold text-gradient">{totalPoints}</div>
+                <div className="text-2xl font-bold text-primary">{totalPoints}</div>
                 <div className="text-xs text-muted-foreground">Total Points</div>
               </div>
             </div>
           </Card>
 
-          <Card className="p-4 shadow-elevated border-0 bg-gradient-accent/5 backdrop-blur-sm">
+          <Card className="p-4 shadow-sm border border-border bg-accent/50">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-accent flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center">
                 <Trophy className="text-white" size={20} />
               </div>
               <div>
-                <div className="text-2xl font-bold text-gradient">{unlockedBadges.length}</div>
+                <div className="text-2xl font-bold text-primary">{unlockedBadges.length}</div>
                 <div className="text-xs text-muted-foreground">Badges Earned</div>
               </div>
             </div>
@@ -122,9 +122,9 @@ export default function Gamification() {
 
         {/* Active Multiplier */}
         {activeMultiplier && (
-          <Card className="p-4 mb-6 shadow-elevated border-0 bg-gradient-to-r from-yellow-50/50 to-orange-50/50 backdrop-blur-sm">
+          <Card className="p-4 mb-6 shadow-sm border border-border bg-muted/40">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 flex items-center justify-center shadow-soft animate-pulse">
+              <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center shadow-sm animate-pulse">
                 <span className="text-2xl">{activeMultiplier.icon}</span>
               </div>
               <div className="flex-1">
@@ -166,24 +166,24 @@ export default function Gamification() {
             <ProgressTree nodes={progressTree} />
             
             {/* Progress Summary */}
-            <Card className="p-6 shadow-elevated border-0 bg-card/80 backdrop-blur-sm">
+            <Card className="p-6 shadow-sm border border-border bg-card">
               <h3 className="font-bold text-lg mb-4 flex items-center">
                 <Crown className="mr-2 text-yellow-500" size={20} />
                 Your Journey Summary
               </h3>
               
               <div className="grid grid-cols-2 gap-4 text-center">
-                <div className="p-3 rounded-xl bg-muted/20">
-                  <div className="text-2xl font-bold text-gradient">{completedNodes.length}</div>
+                <div className="p-3 rounded-lg bg-muted/20">
+                  <div className="text-2xl font-bold text-primary">{completedNodes.length}</div>
                   <div className="text-xs text-muted-foreground">Levels Completed</div>
                 </div>
-                <div className="p-3 rounded-xl bg-muted/20">
-                  <div className="text-2xl font-bold text-gradient">{availableNodes.length}</div>
+                <div className="p-3 rounded-lg bg-muted/20">
+                  <div className="text-2xl font-bold text-primary">{availableNodes.length}</div>
                   <div className="text-xs text-muted-foreground">Levels Available</div>
                 </div>
               </div>
               
-              <div className="mt-4 p-3 bg-gradient-primary/10 rounded-xl">
+              <div className="mt-4 p-3 bg-muted/40 rounded-lg">
                 <p className="text-sm text-center text-muted-foreground">
                   {completedNodes.length === 0 
                     ? "Begin your mindful tracking journey to unlock your first level!"
@@ -201,17 +201,17 @@ export default function Gamification() {
               {streakMultipliers.map(multiplier => (
                 <Card 
                   key={multiplier.id} 
-                  className={`p-4 shadow-elevated border-0 backdrop-blur-sm transition-all duration-300 ${
+                  className={`p-4 shadow-sm border border-border transition-all duration-300 ${
                     multiplier.isActive 
-                      ? 'bg-gradient-to-r from-yellow-50/50 to-orange-50/50 border-yellow-200/50 shadow-lg' 
-                      : 'bg-card/80'
+                      ? 'bg-muted/40 border-yellow-200/50 shadow-md' 
+                      : 'bg-card'
                   }`}
                 >
                   <div className="flex items-center gap-4">
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
                       multiplier.isActive 
-                        ? 'bg-gradient-to-r from-yellow-400 to-orange-400 shadow-soft animate-pulse' 
-                        : 'bg-gradient-primary'
+                        ? 'bg-primary shadow-sm animate-pulse' 
+                        : 'bg-primary'
                     }`}>
                       <span className="text-2xl">{multiplier.icon}</span>
                     </div>
@@ -257,7 +257,7 @@ export default function Gamification() {
             </div>
             
             {/* Multiplier Explanation */}
-            <Card className="p-4 shadow-elevated border-0 bg-card/80 backdrop-blur-sm">
+            <Card className="p-4 shadow-sm border border-border bg-card">
               <h3 className="font-semibold text-foreground mb-2 flex items-center">
                 <Zap className="mr-2 text-yellow-500" size={16} />
                 How Multipliers Work

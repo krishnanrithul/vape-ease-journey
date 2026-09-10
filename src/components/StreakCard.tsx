@@ -1,5 +1,6 @@
 import { Card } from '@/components/ui/card';
-import streakGrowth from '@/assets/streak-growth.jpg';
+import { motion } from 'motion/react';
+import { AnimatedNumber } from '@/components/motion-primitives/animated-number';
 
 interface StreakCardProps {
   streakData: {
@@ -17,13 +18,13 @@ export function StreakCard({ streakData, getStreakIcon, getStreakMessage }: Stre
   // Special empty state for new users
   if (streakData.current === 0 && streakData.longest === 0) {
     return (
-      <Card className="p-6 shadow-elevated border-0 bg-gradient-to-br from-secondary/5 to-accent/5 backdrop-blur-sm">
+      <Card className="p-6 shadow-sm border border-border bg-muted/30">
         <div className="text-center">
-          <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-secondary/20 to-accent/20 flex items-center justify-center shadow-soft mb-4">
+          <div className="w-20 h-20 mx-auto rounded-full bg-muted flex items-center justify-center shadow-sm mb-4">
             <span className="text-4xl opacity-60">🌰</span>
           </div>
 
-          <h3 className="font-bold text-lg text-gradient mb-2">
+          <h3 className="font-bold text-lg text-primary mb-2">
             Plant Your Seed
           </h3>
           
@@ -40,22 +41,27 @@ export function StreakCard({ streakData, getStreakIcon, getStreakMessage }: Stre
   }
 
   return (
-    <Card className="p-6 shadow-elevated border-0 bg-gradient-to-br from-secondary/5 to-accent/5 backdrop-blur-sm">
+    <Card className="p-6 shadow-sm border border-border bg-muted/30">
       <div className="text-center">
         <div className="relative mb-4">
           {/* Growth Visual */}
-          <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-secondary/20 to-accent/20 flex items-center justify-center shadow-soft">
+          <div className="w-20 h-20 mx-auto rounded-full bg-muted flex items-center justify-center shadow-sm">
             <span className="text-4xl animate-bounce">{getStreakIcon()}</span>
           </div>
           
           {/* Streak Counter */}
-          <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-accent rounded-full flex items-center justify-center shadow-medium">
-            <span className="text-sm font-bold text-accent-foreground">{streakData.current}</span>
+          <div className="absolute -top-2 -right-2 w-8 h-8 bg-primary rounded-full flex items-center justify-center shadow-sm">
+            <AnimatedNumber
+              value={streakData.current}
+              className="num text-sm font-bold text-primary-foreground"
+              springOptions={{ bounce: 0, duration: 500 }}
+            />
           </div>
         </div>
 
-        <h3 className="font-bold text-lg text-gradient mb-2">
-          {streakData.current} Day Streak
+        <h3 className="font-bold text-lg text-primary mb-2 flex items-center justify-center gap-1">
+          <AnimatedNumber value={streakData.current} springOptions={{ bounce: 0, duration: 500 }} />
+          <span>Day Streak</span>
         </h3>
         
         <p className="text-sm text-muted-foreground mb-4 font-medium">
@@ -66,9 +72,11 @@ export function StreakCard({ streakData, getStreakIcon, getStreakMessage }: Stre
         {streakData.current > 0 && (
           <div className="space-y-2">
             <div className="w-full bg-muted/30 rounded-full h-2 overflow-hidden">
-              <div 
-                className="h-full bg-gradient-success rounded-full transition-all duration-1000 ease-out"
-                style={{ width: `${progressToNext}%` }}
+              <motion.div
+                className="h-full bg-secondary rounded-full"
+                initial={false}
+                animate={{ width: `${progressToNext}%` }}
+                transition={{ type: 'spring', bounce: 0, duration: 0.8 }}
               />
             </div>
             <p className="text-xs text-muted-foreground">

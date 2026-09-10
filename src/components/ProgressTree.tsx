@@ -12,7 +12,7 @@ export function ProgressTree({ nodes }: ProgressTreeProps) {
   const sortedNodes = [...nodes].sort((a, b) => a.level - b.level);
 
   return (
-    <Card className="p-6 shadow-elevated border-0 bg-card/80 backdrop-blur-sm">
+    <Card className="p-6 shadow-sm border border-border bg-card">
       <h3 className="font-bold text-lg mb-6 flex items-center">
         <span className="text-2xl mr-2">🌳</span>
         Progress Tree
@@ -26,14 +26,14 @@ export function ProgressTree({ nodes }: ProgressTreeProps) {
             <div key={node.id} className="relative">
               {/* Connection line to previous node */}
               {index > 0 && (
-                <div className="absolute -top-6 left-6 w-0.5 h-6 bg-gradient-to-b from-primary/30 to-transparent"></div>
+                <div className="absolute -top-6 left-6 w-0.5 h-6 bg-border"></div>
               )}
               
-              <div className={`relative p-4 rounded-xl border transition-all duration-300 ${
+              <div className={`relative p-4 rounded-lg border transition-all duration-300 ${
                 node.isCompleted 
-                  ? 'bg-gradient-success/10 border-green-200/50 shadow-lg' 
+                  ? 'bg-secondary/10 border-green-200/50 shadow-md' 
                   : node.isUnlocked 
-                  ? 'bg-gradient-primary/5 border-primary/20 shadow-medium' 
+                  ? 'bg-muted/40 border-primary/20 shadow-md' 
                   : 'bg-muted/20 border-muted/30'
               }`}>
                 {/* Level indicator */}
@@ -54,9 +54,9 @@ export function ProgressTree({ nodes }: ProgressTreeProps) {
                   {/* Status icon */}
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
                     node.isCompleted 
-                      ? 'bg-gradient-success shadow-soft' 
+                      ? 'bg-secondary shadow-sm' 
                       : node.isUnlocked 
-                      ? 'bg-gradient-primary shadow-soft' 
+                      ? 'bg-primary shadow-sm' 
                       : 'bg-muted/40'
                   } ${node.isCompleted ? 'animate-scale-in' : ''}`}>
                     {node.isCompleted ? (

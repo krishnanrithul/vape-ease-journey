@@ -9,19 +9,19 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-soft hover:shadow-medium",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-soft hover:shadow-medium",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm",
         outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground shadow-soft hover:shadow-medium",
+          "border border-input bg-background hover:bg-accent hover:text-accent-foreground shadow-sm",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-soft hover:shadow-medium",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        puff: "bg-gradient-primary text-primary-foreground hover:shadow-glow transform hover:scale-105 transition-bounce font-bold shadow-medium rounded-2xl text-lg",
-        calm: "bg-gradient-calm text-foreground border border-border hover:bg-muted/50 transition-smooth shadow-soft hover:shadow-medium",
-        success: "bg-gradient-success text-secondary-foreground hover:shadow-medium transition-smooth shadow-soft",
-        accent: "bg-gradient-accent text-accent-foreground hover:shadow-glow transition-gentle shadow-soft",
+        puff: "bg-primary text-primary-foreground hover:bg-primary/90 font-bold shadow-sm text-lg",
+        calm: "bg-card text-foreground border border-border hover:bg-muted/50 shadow-sm",
+        success: "bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-sm",
+        accent: "bg-accent text-accent-foreground hover:bg-accent/80 shadow-sm",
       },
       size: {
         default: "h-11 px-6 py-2 font-medium",

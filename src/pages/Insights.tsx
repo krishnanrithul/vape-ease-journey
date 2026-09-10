@@ -2,11 +2,14 @@ import { Card } from '@/components/ui/card';
 import { usePuffData } from '@/hooks/usePuffData';
 import { AnimatedChart } from '@/components/AnimatedChart';
 import { EmptyState } from '@/components/EmptyState';
-import { TrendingDown, Calendar, Target, Trophy } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { TrendingDown, Calendar, Target, Trophy, BarChart3, Flame, Sun, CalendarDays } from 'lucide-react';
+import { StatsCarousel, StatItem } from '@/components/StatsCarousel';
 import emptyStateInsights from '@/assets/empty-state-insights.jpg';
 
 export default function Insights() {
-  const { getWeeklyData, getInsight, getTodaysPuffs, dailyGoal, achievements, getRecentAchievements, puffs } = usePuffData();
+  const navigate = useNavigate();
+  const { getWeeklyData, getInsight, getTodaysPuffs, dailyGoal, achievements, getRecentAchievements, puffs, streakData } = usePuffData();
   
   const weeklyData = getWeeklyData();
   const insight = getInsight();
@@ -16,10 +19,22 @@ export default function Insights() {
   const recentAchievements = getRecentAchievements();
   const hasAnyData = puffs.length > 0;
 
+  const trackedDays = weeklyData.filter(d => d.puffs > 0);
+  const bestDay = trackedDays.length ? trackedDays.reduce((min, d) => (d.puffs < min.puffs ? d : min)) : null;
+  const todayTone: StatItem['tone'] =
+    todaysPuffs >= dailyGoal ? 'destructive' : todaysPuffs >= dailyGoal * 0.8 ? 'warning' : 'success';
+
+  const stats: StatItem[] = [
+    { key: 'today', label: 'Today', value: todaysPuffs, unit: `/ ${dailyGoal}`, icon: Sun, tone: todayTone, hint: todaysPuffs >= dailyGoal ? 'Over limit' : `${dailyGoal - todaysPuffs} remaining` },
+    { key: 'avg', label: 'Week avg', value: weekAvg, unit: '/ day', icon: CalendarDays, tone: weekAvg <= dailyGoal ? 'default' : 'warning', hint: weekAvg <= dailyGoal ? 'On track' : 'Above goal' },
+    { key: 'best', label: 'Best day', value: bestDay?.puffs ?? 0, unit: 'puffs', icon: Target, tone: 'success', hint: bestDay ? `${bestDay.date} this week` : 'No data yet' },
+    { key: 'streak', label: 'Streak', value: streakData.current, unit: streakData.current === 1 ? 'day' : 'days', icon: Flame, tone: 'primary', hint: `Best: ${streakData.longest}` },
+  ];
+
   // Show empty state when no data exists
   if (!hasAnyData) {
     return (
-      <div className="min-h-screen bg-gradient-calm pb-32">
+      <div className="min-h-screen bg-background pb-32">
         <div className="px-6 pt-6">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-foreground mb-2">Your Progress</h1>
@@ -31,17 +46,17 @@ export default function Insights() {
             title="No Data Yet"
             description="Start tracking your sessions to see beautiful insights about your patterns, progress, and achievements."
             actionText="Go to Home"
-            onAction={() => window.location.href = '/'}
+            onAction={() => navigate('/')}
           />
 
           <div className="mt-6 grid grid-cols-2 gap-4">
-            <Card className="p-4 shadow-elevated border-0 bg-card/80 backdrop-blur-sm text-center">
-              <div className="text-2xl mb-2">📊</div>
+            <Card className="p-4 shadow-sm border border-border bg-card text-center">
+              <BarChart3 className="mx-auto mb-2 text-primary" size={24} />
               <h3 className="font-semibold text-sm mb-1">Weekly Charts</h3>
               <p className="text-xs text-muted-foreground">Visual progress tracking</p>
             </Card>
-            <Card className="p-4 shadow-elevated border-0 bg-card/80 backdrop-blur-sm text-center">
-              <div className="text-2xl mb-2">🎯</div>
+            <Card className="p-4 shadow-sm border border-border bg-card text-center">
+              <Target className="mx-auto mb-2 text-primary" size={24} />
               <h3 className="font-semibold text-sm mb-1">Personal Insights</h3>
               <p className="text-xs text-muted-foreground">Pattern recognition</p>
             </Card>
@@ -52,31 +67,20 @@ export default function Insights() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-calm pb-32">
+    <div className="min-h-screen bg-background pb-32">
       <div className="px-6 pt-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-foreground mb-2">Your Progress</h1>
           <p className="text-muted-foreground">Understanding your patterns helps reduce gradually</p>
         </div>
 
-        {/* Key Stats */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          <Card className="p-4 text-center shadow-card">
-            <div className="text-2xl font-bold text-primary">{todaysPuffs}</div>
-            <div className="text-xs text-muted-foreground">Today</div>
-          </Card>
-          <Card className="p-4 text-center shadow-card">
-            <div className="text-2xl font-bold text-accent">{weekAvg}</div>
-            <div className="text-xs text-muted-foreground">Week Avg</div>
-          </Card>
-          <Card className="p-4 text-center shadow-card">
-            <div className="text-2xl font-bold text-secondary">{dailyGoal}</div>
-            <div className="text-xs text-muted-foreground">Goal</div>
-          </Card>
+        {/* Key Stats — swipeable */}
+        <div className="mb-6">
+          <StatsCarousel items={stats} />
         </div>
 
         {/* Weekly Chart */}
-        <Card className="p-6 mb-6 shadow-elevated border-0 bg-card/80 backdrop-blur-sm">
+        <Card className="p-6 mb-6 shadow-sm border border-border bg-card">
           <h2 className="text-lg font-bold mb-4 flex items-center">
             <Calendar className="mr-2" size={20} />
             Last 7 Days
@@ -85,7 +89,7 @@ export default function Insights() {
         </Card>
 
         {/* Insights Card */}
-        <Card className="p-6 mb-6 shadow-elevated border-0 bg-gradient-to-br from-accent/5 to-primary/5 backdrop-blur-sm">
+        <Card className="p-6 mb-6 shadow-sm border border-border bg-muted/30">
           <h2 className="text-lg font-bold mb-3 flex items-center">
             <TrendingDown className="mr-2" size={20} />
             Personal Insight
@@ -95,7 +99,7 @@ export default function Insights() {
 
         {/* Recent Achievements */}
         {recentAchievements.length > 0 && (
-          <Card className="p-6 mb-6 shadow-elevated border-0 bg-gradient-success/5 backdrop-blur-sm">
+          <Card className="p-6 mb-6 shadow-sm border border-border bg-secondary/10">
             <h2 className="text-lg font-bold mb-4 flex items-center">
               <Trophy className="mr-2" size={20} />
               Recent Achievements
@@ -104,9 +108,9 @@ export default function Insights() {
               {recentAchievements.map((achievement) => (
                 <div 
                   key={achievement.id}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-gradient-success/10 border border-secondary/20"
+                  className="flex items-center gap-3 p-3 rounded-lg bg-secondary/10 border border-secondary/20"
                 >
-                  <div className="w-10 h-10 rounded-full bg-gradient-success flex items-center justify-center shadow-soft">
+                  <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center shadow-sm">
                     <span className="text-lg">{achievement.icon}</span>
                   </div>
                   <div className="flex-1">
@@ -120,7 +124,7 @@ export default function Insights() {
         )}
 
         {/* Progress Summary */}
-        <Card className="p-6 shadow-elevated border-0 bg-card/80 backdrop-blur-sm">
+        <Card className="p-6 shadow-sm border border-border bg-card">
           <h2 className="text-lg font-bold mb-4 flex items-center">
             <Target className="mr-2" size={20} />
             This Week's Summary
@@ -128,15 +132,15 @@ export default function Insights() {
           <div className="space-y-3">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Total puffs</span>
-              <span className="font-medium">{weekTotal}</span>
+              <span className="font-medium font-mono">{weekTotal}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Daily average</span>
-              <span className="font-medium">{weekAvg}</span>
+              <span className="font-medium font-mono">{weekAvg}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Goal adherence</span>
-              <span className={`font-medium ${weekAvg <= dailyGoal ? 'text-secondary' : 'text-accent'}`}>
+              <span className={`font-medium ${weekAvg <= dailyGoal ? 'text-success' : 'text-warning'}`}>
                 {weekAvg <= dailyGoal ? 'On track' : 'Above goal'}
               </span>
             </div>

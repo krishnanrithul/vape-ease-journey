@@ -21,11 +21,11 @@ export function EmptyState({
   showAction = true 
 }: EmptyStateProps) {
   return (
-    <Card className="p-8 shadow-elevated border-0 bg-card/80 backdrop-blur-sm">
+    <Card className="p-8 shadow-sm border border-border bg-card">
       <div className="text-center">
         {/* Visual Element */}
         {image ? (
-          <div className="w-32 h-32 mx-auto mb-6 rounded-2xl overflow-hidden shadow-medium">
+          <div className="w-32 h-32 mx-auto mb-6 rounded-lg overflow-hidden shadow-md">
             <img 
               src={image} 
               alt={title}
@@ -33,7 +33,7 @@ export function EmptyState({
             />
           </div>
         ) : icon ? (
-          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-calm flex items-center justify-center shadow-soft">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-muted flex items-center justify-center shadow-sm">
             <span className="text-4xl opacity-60">{icon}</span>
           </div>
         ) : null}
@@ -47,9 +47,9 @@ export function EmptyState({
         {/* Action Button */}
         {showAction && onAction && (
           <Button
-            variant="accent"
+            variant="default"
             onClick={onAction}
-            className="shadow-medium hover:shadow-large"
+            className="shadow-md hover:shadow-md"
           >
             {actionText}
           </Button>

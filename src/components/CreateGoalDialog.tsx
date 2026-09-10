@@ -14,6 +14,7 @@ interface CreateGoalDialogProps {
 
 export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
   const [open, setOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -29,7 +30,15 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.title || !formData.description) return;
+    if (!formData.title.trim() || !formData.description.trim()) {
+      setError('Please add both a title and a description.');
+      return;
+    }
+    if (!formData.target || formData.target < 1) {
+      setError('Target must be at least 1.');
+      return;
+    }
+    setError(null);
     
     const goalData: Partial<Goal> = {
       title: formData.title,
@@ -65,7 +74,7 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="accent" className="shadow-medium">
+        <Button variant="default">
           <Plus size={16} className="mr-2" />
           Create Custom Goal
         </Button>
@@ -77,6 +86,9 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <p role="alert" className="text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-lg px-3 py-2">{error}</p>
+          )}
           <div>
             <Label htmlFor="title">Goal Title</Label>
             <Input
@@ -206,7 +218,7 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
             <Button type="button" variant="outline" onClick={() => setOpen(false)} className="flex-1">
               Cancel
             </Button>
-            <Button type="submit" variant="success" className="flex-1">
+            <Button type="submit" className="flex-1">
               Create Goal
             </Button>
           </div>

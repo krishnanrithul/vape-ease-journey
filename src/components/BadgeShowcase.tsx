@@ -20,19 +20,9 @@ export function BadgeShowcase({ badges, title, emptyMessage }: BadgeShowcaseProp
     }
   };
 
-  const getRarityGlow = (rarity: string) => {
-    switch (rarity) {
-      case 'common': return 'shadow-gray-200/50';
-      case 'rare': return 'shadow-blue-200/50';
-      case 'epic': return 'shadow-purple-200/50';
-      case 'legendary': return 'shadow-yellow-200/50';
-      default: return 'shadow-gray-200/50';
-    }
-  };
-
   if (badges.length === 0 && emptyMessage) {
     return (
-      <Card className="p-6 shadow-elevated border-0 bg-card/80 backdrop-blur-sm">
+      <Card className="p-6 shadow-sm border border-border bg-card">
         <div className="text-center">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/30 flex items-center justify-center">
             <span className="text-2xl opacity-60">🏆</span>
@@ -45,7 +35,7 @@ export function BadgeShowcase({ badges, title, emptyMessage }: BadgeShowcaseProp
   }
 
   return (
-    <Card className="p-6 shadow-elevated border-0 bg-card/80 backdrop-blur-sm">
+    <Card className="p-6 shadow-sm border border-border bg-card">
       <h3 className="font-bold text-lg mb-4 flex items-center">
         <span className="text-2xl mr-2">🏆</span>
         {title}
@@ -59,9 +49,9 @@ export function BadgeShowcase({ badges, title, emptyMessage }: BadgeShowcaseProp
           return (
             <div
               key={badge.id}
-              className={`relative p-4 rounded-xl border transition-all duration-300 ${
-                isUnlocked 
-                  ? `bg-gradient-to-br from-${badge.rarity === 'legendary' ? 'yellow' : badge.rarity === 'epic' ? 'purple' : badge.rarity === 'rare' ? 'blue' : 'gray'}-50/50 to-transparent border-${badge.rarity === 'legendary' ? 'yellow' : badge.rarity === 'epic' ? 'purple' : badge.rarity === 'rare' ? 'blue' : 'gray'}-200/50 ${getRarityGlow(badge.rarity)} shadow-lg` 
+              className={`relative p-4 rounded-lg border transition-colors duration-300 ${
+                isUnlocked
+                  ? 'bg-card border-border shadow-sm'
                   : 'bg-muted/20 border-muted/30'
               }`}
             >
@@ -79,7 +69,7 @@ export function BadgeShowcase({ badges, title, emptyMessage }: BadgeShowcaseProp
               
               <div className="flex items-start gap-3">
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                  isUnlocked ? 'bg-gradient-primary shadow-soft' : 'bg-muted/40'
+                  isUnlocked ? 'bg-primary shadow-sm' : 'bg-muted/40'
                 } ${isUnlocked && badge.rarity === 'legendary' ? 'animate-pulse' : ''}`}>
                   <span className={`text-2xl ${isUnlocked ? '' : 'grayscale opacity-50'}`}>
                     {badge.icon}

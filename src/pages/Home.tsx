@@ -3,22 +3,26 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Minus, TrendingUp, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { usePuffData } from '@/hooks/usePuffData';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { AchievementCard } from '@/components/AchievementCard';
 import { StreakCard } from '@/components/StreakCard';
 import { OnboardingFlow } from '@/components/OnboardingFlow';
 import { EmptyState } from '@/components/EmptyState';
+import { AnimatedNumber } from '@/components/motion-primitives/animated-number';
+import { TextEffect } from '@/components/motion-primitives/text-effect';
+import { RingGauge } from '@/components/RingGauge';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { toast } from 'sonner';
-import heroImage from '@/assets/hero-illustration.jpg';
 import emptyStateTracking from '@/assets/empty-state-tracking.jpg';
 
 export default function Home() {
   const navigate = useNavigate();
-  const { addPuff, getTodaysPuffs, dailyGoal, achievements, streakData, getStreakIcon, getStreakMessage, puffs } = usePuffData();
+  const { addPuff, removePuff, getTodaysPuffs, dailyGoal, achievements, streakData, getStreakIcon, getStreakMessage, puffs } = usePuffData();
+  const MAX_QUICK_COUNT = 20;
   const { hasSeenOnboarding, completeOnboarding } = useOnboarding();
   const [quickCount, setQuickCount] = useState(1);
+  const [logOpen, setLogOpen] = useState(false);
   
   const todaysPuffs = getTodaysPuffs();
   const progressPercent = Math.min((todaysPuffs / dailyGoal) * 100, 100);
@@ -32,22 +36,32 @@ export default function Home() {
   // Show loading state while checking onboarding status
   if (hasSeenOnboarding === null) {
     return (
-      <div className="min-h-screen bg-gradient-calm flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-8 h-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       </div>
     );
   }
 
   const handlePuffLog = () => {
-    addPuff(quickCount);
-    toast.success(`${quickCount} puff${quickCount > 1 ? 's' : ''} logged`);
+    const logged = quickCount;
+    const id = addPuff(logged);
+    toast.success(`${logged} puff${logged > 1 ? 's' : ''} logged`, {
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          removePuff(id);
+          toast.message('Log removed');
+        },
+      },
+    });
     setQuickCount(1);
+    setLogOpen(false);
   };
 
   // Show empty state for first-time users with no data
   if (!hasAnyData) {
     return (
-      <div className="min-h-screen bg-gradient-calm pb-32 font-inter">
+      <div className="min-h-screen bg-background pb-32 font-inter">
         <div className="px-6 pt-6 pb-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2 tracking-tight">Welcome to VapeWise</h1>
@@ -62,7 +76,7 @@ export default function Home() {
             onAction={handlePuffLog}
           />
 
-          <div className="mt-6 p-4 bg-muted/30 rounded-xl">
+          <div className="mt-6 p-4 bg-muted/30 rounded-lg">
             <h3 className="font-semibold mb-2 text-sm">Why Track?</h3>
             <div className="space-y-2 text-xs text-muted-foreground">
               <p>• Build awareness of your habits</p>
@@ -77,104 +91,113 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-calm pb-32 font-inter">
+    <div className="min-h-screen bg-background pb-32 font-inter">
       {/* Hero Section */}
       <div className="px-6 pt-6 pb-8">
-        <div className="relative overflow-hidden rounded-3xl mb-8 shadow-elevated">
-          <img 
-            src={heroImage} 
-            alt="Mindful tracking" 
-            className="w-full h-40 object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-transparent" />
-          <div className="absolute bottom-6 left-6">
-            <h1 className="text-3xl font-bold text-foreground mb-1 tracking-tight">Welcome back</h1>
-            <p className="text-muted-foreground font-medium">Track mindfully, reduce gradually</p>
-          </div>
+        <div className="mb-8">
+          <TextEffect
+            as="h1"
+            per="char"
+            preset="fade-in-blur"
+            speedReveal={2.5}
+            className="text-3xl font-bold text-foreground mb-1 tracking-tight"
+          >
+            Welcome back
+          </TextEffect>
+          <p className="text-muted-foreground font-medium">Track mindfully, reduce gradually</p>
         </div>
 
-        {/* Today's Progress */}
-        <Card className="p-8 shadow-elevated border-0 bg-card/80 backdrop-blur-sm">
-          <div className="text-center mb-6">
-            <h2 className="text-5xl font-bold text-gradient mb-2 tracking-tighter">{todaysPuffs}</h2>
-            <p className="text-muted-foreground font-medium tracking-wide">puffs today</p>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="flex justify-between text-sm font-medium">
-              <span className="text-muted-foreground">Daily goal</span>
-              <span className="text-foreground">{todaysPuffs}/{dailyGoal}</span>
-            </div>
-            <Progress 
-              value={progressPercent} 
-              className="h-3 shadow-soft"
-            />
-            {progressPercent < 100 ? (
-              <p className="text-sm text-center text-muted-foreground font-medium">
-                {dailyGoal - todaysPuffs} remaining today
-              </p>
-            ) : (
-              <p className="text-sm text-center text-accent font-semibold">
-                🎉 Goal reached! Consider setting a lower target tomorrow
-              </p>
-            )}
-          </div>
+        {/* Today's Progress — ring gauge is the focal element */}
+        <Card className="p-6 shadow-sm border border-border bg-card flex flex-col items-center">
+          <RingGauge value={todaysPuffs} max={dailyGoal} />
+          <p
+            className={`mt-4 text-sm font-medium text-center ${
+              progressPercent >= 100
+                ? 'text-destructive'
+                : progressPercent >= 80
+                ? 'text-warning'
+                : 'text-muted-foreground'
+            }`}
+          >
+            {progressPercent >= 100
+              ? 'Over your limit for today — that’s okay, tomorrow is a fresh start'
+              : progressPercent >= 80
+              ? `${dailyGoal - todaysPuffs} left — you’re close to your limit`
+              : `${dailyGoal - todaysPuffs} remaining today`}
+          </p>
         </Card>
       </div>
 
-      {/* Quick Log Section */}
+      {/* Primary action: opens the log drawer */}
       <div className="px-6 space-y-6">
-        <h3 className="text-xl font-bold text-foreground tracking-tight">Quick Log</h3>
-        
-        {/* Puff Counter */}
-        <Card className="p-6 shadow-elevated border-0 bg-card/90 backdrop-blur-sm">
-          <div className="flex items-center justify-between mb-6">
-            <span className="text-muted-foreground font-medium">Number of puffs</span>
-            <div className="flex items-center gap-4">
+        <Button
+          size="lg"
+          onClick={() => setLogOpen(true)}
+          className="w-full h-14 text-base font-semibold"
+        >
+          <Plus size={18} className="mr-2" />
+          Log puffs
+        </Button>
+
+        <Drawer open={logOpen} onOpenChange={setLogOpen}>
+          <DrawerContent>
+            <div className="mx-auto w-full max-w-md px-6 pb-8">
+              <DrawerHeader className="px-0">
+                <DrawerTitle className="font-display">Log puffs</DrawerTitle>
+                <DrawerDescription>How many this session?</DrawerDescription>
+              </DrawerHeader>
+
+              <div className="flex items-center justify-center gap-8 py-6">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setQuickCount(Math.max(1, quickCount - 1))}
+                  className="h-14 w-14 rounded-full"
+                  aria-label="Decrease"
+                >
+                  <Minus size={22} />
+                </Button>
+                <AnimatedNumber
+                  value={quickCount}
+                  className="num text-6xl font-bold w-24 text-center"
+                  springOptions={{ bounce: 0, duration: 300 }}
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setQuickCount(Math.min(MAX_QUICK_COUNT, quickCount + 1))}
+                  disabled={quickCount >= MAX_QUICK_COUNT}
+                  className="h-14 w-14 rounded-full"
+                  aria-label="Increase"
+                >
+                  <Plus size={22} />
+                </Button>
+              </div>
+
               <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setQuickCount(Math.max(1, quickCount - 1))}
-                className="h-10 w-10 shadow-soft"
+                onClick={handlePuffLog}
+                className="w-full h-14 text-base font-semibold"
               >
-                <Minus size={18} />
-              </Button>
-              <span className="text-2xl font-bold w-12 text-center tracking-tight">{quickCount}</span>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setQuickCount(quickCount + 1)}
-                className="h-10 w-10 shadow-soft"
-              >
-                <Plus size={18} />
+                Log {quickCount} Puff{quickCount > 1 ? 's' : ''}
               </Button>
             </div>
-          </div>
-          
-          {/* Log Button */}
-          <Button 
-            variant="puff"
-            onClick={handlePuffLog}
-            className="w-full h-14 text-lg font-semibold shadow-large hover:shadow-glow"
-          >
-            Log {quickCount} Puff{quickCount > 1 ? 's' : ''}
-          </Button>
-        </Card>
+          </DrawerContent>
+        </Drawer>
 
         {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-4">
           <Button 
-            variant="calm"
+            variant="outline"
             onClick={() => navigate('/insights')}
-            className="h-20 flex-col shadow-medium hover:shadow-elevated"
+            className="h-20 flex-col"
           >
             <TrendingUp size={24} className="mb-2" />
             <span className="text-sm font-semibold">View Insights</span>
           </Button>
           <Button 
-            variant="calm"
+            variant="outline"
             onClick={() => navigate('/delay')}
-            className="h-20 flex-col shadow-medium hover:shadow-elevated"
+            className="h-20 flex-col"
           >
             <Clock size={24} className="mb-2" />
             <span className="text-sm font-semibold">Delay Craving</span>

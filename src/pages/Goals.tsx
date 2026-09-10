@@ -85,7 +85,7 @@ export default function Goals() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-calm pb-32">
+    <div className="min-h-screen bg-background pb-32">
       <div className="px-6 pt-6">
         <div className="mb-6">
           <div className="flex justify-between items-start mb-4">
@@ -113,14 +113,14 @@ export default function Goals() {
 
           <TabsContent value="active" className="space-y-6">
             {/* Current Progress Overview */}
-            <Card className="p-6 shadow-elevated border-0 bg-card/80 backdrop-blur-sm">
+            <Card className="p-6 shadow-sm border border-border bg-card">
               <h2 className="text-lg font-semibold mb-4 flex items-center">
                 <Target className="mr-2" size={20} />
                 Today's Progress
               </h2>
               
               <div className="text-center mb-4">
-                <div className="text-3xl font-bold text-gradient mb-1">{todaysPuffs}</div>
+                <div className="text-3xl font-bold text-primary mb-1">{todaysPuffs}</div>
                 <div className="text-muted-foreground">of {dailyGoal} puffs</div>
               </div>
 
@@ -132,7 +132,7 @@ export default function Goals() {
                     {dailyGoal - todaysPuffs} puffs remaining
                   </p>
                 ) : progressPercent < 120 ? (
-                  <p className="text-sm text-accent font-medium">
+                  <p className="text-sm text-success font-medium">
                     Goal reached! Well done 🎉
                   </p>
                 ) : (
@@ -144,7 +144,7 @@ export default function Goals() {
             </Card>
 
             {/* Quick Goal Setting */}
-            <Card className="p-6 shadow-elevated border-0 bg-card/80 backdrop-blur-sm">
+            <Card className="p-6 shadow-sm border border-border bg-card">
               <h2 className="text-lg font-semibold mb-4">Set Daily Goal</h2>
               
               <div className="flex items-center justify-center gap-4 mb-6">
@@ -157,7 +157,7 @@ export default function Goals() {
                 </Button>
                 
                 <div className="text-center">
-                  <div className="text-4xl font-bold text-gradient">{newGoal}</div>
+                  <div className="text-4xl font-bold text-primary">{newGoal}</div>
                   <div className="text-sm text-muted-foreground">puffs per day</div>
                 </div>
                 
@@ -171,7 +171,7 @@ export default function Goals() {
               </div>
 
               <Button
-                variant="success"
+                variant="default"
                 onClick={handleSaveGoal}
                 className="w-full mb-3"
                 disabled={newGoal === dailyGoal}
@@ -181,7 +181,7 @@ export default function Goals() {
 
               {weekAvg > 0 && (
                 <Button
-                  variant="accent"
+                  variant="outline"
                   onClick={handleRecommendation}
                   className="w-full"
                 >
@@ -209,7 +209,7 @@ export default function Goals() {
             </div>
 
             {activeGoals.length === 0 && (
-              <Card className="p-6 shadow-elevated border-0 bg-card/80 backdrop-blur-sm">
+              <Card className="p-6 shadow-sm border border-border bg-card">
                 <div className="text-center">
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/30 flex items-center justify-center">
                     <Target size={32} className="text-muted-foreground" />
@@ -234,7 +234,7 @@ export default function Goals() {
             ))}
             
             {completedGoals.length === 0 && (
-              <Card className="p-6 shadow-elevated border-0 bg-card/80 backdrop-blur-sm">
+              <Card className="p-6 shadow-sm border border-border bg-card">
                 <div className="text-center">
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/30 flex items-center justify-center">
                     <Trophy size={32} className="text-muted-foreground" />
@@ -252,12 +252,12 @@ export default function Goals() {
             {/* Completed Milestones */}
             {completedMilestonesList.length > 0 && (
               <div>
-                <h3 className="text-lg font-bold text-foreground mb-4">🎉 Achieved Milestones</h3>
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2"><Trophy size={18} className="text-secondary" />Achieved Milestones</h3>
                 <div className="space-y-3">
                   {completedMilestonesList.map(milestone => (
-                    <Card key={milestone.id} className="p-4 shadow-elevated border-0 bg-gradient-success/10 backdrop-blur-sm">
+                    <Card key={milestone.id} className="p-4 shadow-sm border border-border bg-secondary/10">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-gradient-success flex items-center justify-center shadow-soft">
+                        <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center shadow-sm">
                           <span className="text-2xl">{milestone.icon}</span>
                         </div>
                         <div className="flex-1">
@@ -277,12 +277,12 @@ export default function Goals() {
 
             {/* Pending Milestones */}
             <div>
-              <h3 className="text-lg font-bold text-foreground mb-4">🎯 Upcoming Milestones</h3>
+              <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2"><Target size={18} className="text-primary" />Upcoming Milestones</h3>
               <div className="space-y-3">
                 {pendingMilestones.map(milestone => (
-                  <Card key={milestone.id} className="p-4 shadow-elevated border-0 bg-card/80 backdrop-blur-sm">
+                  <Card key={milestone.id} className="p-4 shadow-sm border border-border bg-card">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-gradient-primary flex items-center justify-center shadow-soft">
+                      <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center shadow-sm">
                         <span className="text-2xl">{milestone.icon}</span>
                       </div>
                       <div className="flex-1">
@@ -299,7 +299,7 @@ export default function Goals() {
             </div>
 
             {pendingMilestones.length === 0 && completedMilestonesList.length === 0 && (
-              <Card className="p-6 shadow-elevated border-0 bg-card/80 backdrop-blur-sm">
+              <Card className="p-6 shadow-sm border border-border bg-card">
                 <div className="text-center">
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/30 flex items-center justify-center">
                     <Trophy size={32} className="text-muted-foreground" />

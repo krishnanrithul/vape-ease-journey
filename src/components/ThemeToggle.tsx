@@ -24,7 +24,7 @@ export function ThemeToggle() {
         <Button 
           variant="ghost" 
           size="icon" 
-          className="h-9 w-9 rounded-full shadow-soft hover:shadow-medium transition-all duration-200"
+          className="h-9 w-9 rounded-full shadow-sm hover:shadow-md transition-all duration-200"
         >
           {getIcon()}
           <span className="sr-only">Toggle theme</span>
@@ -32,7 +32,7 @@ export function ThemeToggle() {
       </DropdownMenuTrigger>
       <DropdownMenuContent 
         align="end" 
-        className="w-36 bg-card/95 backdrop-blur-md border border-border/50 shadow-floating"
+        className="w-36 bg-card border border-border/50 shadow-md"
       >
         <DropdownMenuItem 
           onClick={() => setTheme('light')}

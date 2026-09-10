@@ -197,6 +197,11 @@ export function usePuffData() {
     };
     setPuffs(prev => [newPuff, ...prev]);
     checkAchievements(count);
+    return newPuff.id;
+  };
+
+  const removePuff = (id: string) => {
+    setPuffs(prev => prev.filter(p => p.id !== id));
   };
 
   const getTodaysPuffs = () => {
@@ -269,6 +274,7 @@ export function usePuffData() {
   return {
     puffs,
     addPuff,
+    removePuff,
     getTodaysPuffs,
     getWeeklyData,
     getInsight,

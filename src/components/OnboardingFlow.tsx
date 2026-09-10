@@ -73,8 +73,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-calm flex items-center justify-center p-6">
-      <Card className="w-full max-w-md p-8 shadow-floating border-0 bg-card/90 backdrop-blur-sm">
+    <div className="min-h-screen bg-background flex items-center justify-center p-6">
+      <Card className="w-full max-w-md p-8 shadow-sm border border-border bg-card">
         {/* Progress Indicator */}
         <div className="flex justify-center mb-8">
           <div className="flex gap-2">
@@ -95,7 +95,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         <div className="text-center mb-8">
           {/* Image or Icon */}
           {step.image ? (
-            <div className="w-32 h-32 mx-auto mb-6 rounded-2xl overflow-hidden shadow-medium">
+            <div className="w-32 h-32 mx-auto mb-6 rounded-lg overflow-hidden shadow-md">
               <img 
                 src={step.image} 
                 alt={step.title}
@@ -103,7 +103,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               />
             </div>
           ) : (
-            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-primary flex items-center justify-center shadow-soft">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-primary flex items-center justify-center shadow-sm">
               <span className="text-3xl">{step.icon}</span>
             </div>
           )}
@@ -122,7 +122,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             <div className="space-y-3 mb-6">
               {step.features.map((feature, index) => (
                 <div key={index} className="flex items-center gap-3 text-sm">
-                  <div className="w-5 h-5 rounded-full bg-gradient-success flex items-center justify-center flex-shrink-0">
+                  <div className="w-5 h-5 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
                     <Check size={12} className="text-secondary-foreground" />
                   </div>
                   <span className="text-muted-foreground font-medium">{feature}</span>
@@ -147,7 +147,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           <Button
             variant={isLastStep ? 'success' : 'default'}
             onClick={handleNext}
-            className="shadow-medium hover:shadow-large"
+            className="shadow-md hover:shadow-md"
           >
             {step.cta || 'Continue'}
             {!isLastStep && <ArrowRight size={16} className="ml-2" />}
