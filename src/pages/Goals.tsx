@@ -9,7 +9,16 @@ import { useAdvancedGoals } from '@/hooks/useAdvancedGoals';
 import { GoalCard } from '@/components/GoalCard';
 import { CreateGoalDialog } from '@/components/CreateGoalDialog';
 import { PageSkeleton } from '@/components/PageSkeleton';
+import { AppIcon } from '@/lib/iconMap';
+import { limitTone, TONE_INDICATOR_CLASS, TONE_TEXT_CLASS } from '@/lib/progressTone';
 import { toast } from 'sonner';
+
+/**
+ * Built-in goal that just mirrors "Today's Progress" above it (same number,
+ * same limit) — shown as its own card in the goals list it's pure duplication,
+ * so it's tracked (for XP/streak logic) but not rendered here.
+ */
+const HIDDEN_BUILTIN_GOAL_IDS = new Set(['daily-reduction']);
 
 export default function Goals() {
   const { dailyGoal, setDailyGoal, getTodaysPuffs, getWeeklyData, streakData, puffs, baseline, hydrated: puffsHydrated } = usePuffData();
@@ -74,8 +83,9 @@ export default function Goals() {
     // depending on `goals` here is safe (state stays referentially equal).
   }, [todaysPuffs, weeklyTotal, weekAvg, trackedDays, baseline, streakData.current, goals]);
 
-  const activeGoals = getActiveGoals();
+  const activeGoals = getActiveGoals().filter(goal => !HIDDEN_BUILTIN_GOAL_IDS.has(goal.id));
   const completedGoals = getCompletedGoals();
+  const todayTone = limitTone(todaysPuffs, dailyGoal);
   const pendingMilestones = getPendingMilestones();
   const completedMilestonesList = getCompletedMilestones();
 
@@ -119,31 +129,36 @@ export default function Goals() {
           </TabsList>
 
           <TabsContent value="active" className="space-y-6">
-            {/* Current Progress Overview */}
-            <Card className="p-6 shadow-sm border border-border bg-card">
+            {/* Current Progress Overview — hero stat, so it gets a touch of
+                elevation (subtle gradient) instead of a flat bordered box. */}
+            <Card className="p-6 shadow-md border border-border bg-gradient-to-b from-elevated to-card">
               <h2 className="text-lg font-semibold mb-4 flex items-center">
                 <Target className="mr-2" size={20} />
                 Today's Progress
               </h2>
-              
+
               <div className="text-center mb-4">
-                <div className="text-3xl font-bold text-primary mb-1">{todaysPuffs}</div>
+                <div className={`text-3xl font-bold mb-1 ${TONE_TEXT_CLASS[todayTone]}`}>{todaysPuffs}</div>
                 <div className="text-muted-foreground">of {dailyGoal} puffs</div>
               </div>
 
-              <Progress value={progressPercent} className="h-3 mb-2" />
-              
+              <Progress
+                value={progressPercent}
+                className="h-3 mb-2"
+                indicatorClassName={TONE_INDICATOR_CLASS[todayTone]}
+              />
+
               <div className="text-center">
-                {progressPercent < 100 ? (
+                {todaysPuffs < dailyGoal ? (
                   <p className="text-sm text-muted-foreground">
                     {dailyGoal - todaysPuffs} puffs remaining
                   </p>
-                ) : progressPercent < 120 ? (
+                ) : todaysPuffs === dailyGoal ? (
                   <p className="text-sm text-success font-medium">
-                    Goal reached! Well done 🎉
+                    Right at your limit — nice control
                   </p>
                 ) : (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-destructive font-medium">
                     Over goal by {todaysPuffs - dailyGoal}
                   </p>
                 )}
@@ -151,7 +166,7 @@ export default function Goals() {
             </Card>
 
             {/* Quick Goal Setting */}
-            <Card className="p-6 shadow-sm border border-border bg-card">
+            <Card className="p-6 shadow-sm border border-border bg-elevated">
               <h2 className="text-lg font-semibold mb-4">Set Daily Goal</h2>
               
               <div className="flex items-center justify-center gap-4 mb-6">
@@ -265,12 +280,12 @@ export default function Goals() {
                     <Card key={milestone.id} className="p-4 shadow-sm border border-border bg-secondary/10">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center shadow-sm">
-                          <span className="text-2xl">{milestone.icon}</span>
+                          <AppIcon name={milestone.icon} size={22} className="text-secondary-foreground" />
                         </div>
                         <div className="flex-1">
-                          <h4 className="font-bold text-green-700">{milestone.title}</h4>
-                          <p className="text-sm text-green-600 mb-1">{milestone.description}</p>
-                          <p className="text-xs text-green-500">{milestone.celebrationMessage}</p>
+                          <h4 className="font-bold text-success">{milestone.title}</h4>
+                          <p className="text-sm text-success/90 mb-1">{milestone.description}</p>
+                          <p className="text-xs text-success/70">{milestone.celebrationMessage}</p>
                           <div className="text-xs text-muted-foreground mt-2">
                             Completed on {milestone.completedAt!.toLocaleDateString()} • +{milestone.rewardPoints} XP
                           </div>
@@ -290,7 +305,7 @@ export default function Goals() {
                   <Card key={milestone.id} className="p-4 shadow-sm border border-border bg-card">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center shadow-sm">
-                        <span className="text-2xl">{milestone.icon}</span>
+                        <AppIcon name={milestone.icon} size={22} className="text-primary-foreground" />
                       </div>
                       <div className="flex-1">
                         <h4 className="font-bold text-foreground">{milestone.title}</h4>

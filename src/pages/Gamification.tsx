@@ -4,6 +4,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Star, Crown, Zap, Trophy } from 'lucide-react';
+import { AppIcon } from '@/lib/iconMap';
 import { useAdvancedGamification } from '@/hooks/useAdvancedGamification';
 import { usePuffData } from '@/hooks/usePuffData';
 import { BadgeShowcase } from '@/components/BadgeShowcase';
@@ -153,7 +154,7 @@ export default function Gamification() {
           <Card className="p-4 mb-6 shadow-sm border border-border bg-muted/40">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center shadow-sm animate-pulse">
-                <span className="text-2xl">{activeMultiplier.icon}</span>
+                <AppIcon name={activeMultiplier.icon} size={22} className="text-primary-foreground" />
               </div>
               <div className="flex-1">
                 <h3 className="font-bold text-foreground">{activeMultiplier.name} Active!</h3>
@@ -216,7 +217,7 @@ export default function Gamification() {
                   {completedNodes.length === 0 
                     ? "Begin your mindful tracking journey to unlock your first level!"
                     : completedNodes.length === progressTree.length
-                    ? "🎉 Congratulations! You've mastered all levels!"
+                    ? "Congratulations! You've mastered all levels!"
                     : `Keep going! ${progressTree.length - completedNodes.length} more levels to master.`
                   }
                 </p>
@@ -241,7 +242,7 @@ export default function Gamification() {
                         ? 'bg-primary shadow-sm animate-pulse' 
                         : 'bg-primary'
                     }`}>
-                      <span className="text-2xl">{multiplier.icon}</span>
+                      <AppIcon name={multiplier.icon} size={22} className="text-primary-foreground" />
                     </div>
                     
                     <div className="flex-1">

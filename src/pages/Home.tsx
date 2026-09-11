@@ -93,8 +93,11 @@ export default function Home() {
           <p className="text-muted-foreground font-medium">Track mindfully, reduce gradually</p>
         </div>
 
-        {/* Today's Progress — ring gauge is the focal element */}
-        <Card className="p-6 shadow-sm border border-border bg-card flex flex-col items-center">
+        {/* Today's Progress — ring gauge is the focal element, so it gets a
+            touch of elevation (gradient + glow) instead of a flat bordered box. */}
+        <Card className="relative overflow-hidden p-6 shadow-md border border-border bg-gradient-to-b from-elevated to-card flex flex-col items-center">
+          <div className="pointer-events-none absolute -top-16 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
+          <div className="relative flex flex-col items-center">
           <RingGauge value={todaysPuffs} max={dailyGoal} />
           <p
             className={`mt-4 text-sm font-medium text-center ${
@@ -111,6 +114,7 @@ export default function Home() {
               ? `${dailyGoal - todaysPuffs} left — you’re close to your limit`
               : `${dailyGoal - todaysPuffs} remaining today`}
           </p>
+          </div>
         </Card>
       </div>
 

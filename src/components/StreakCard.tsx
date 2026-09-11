@@ -1,6 +1,8 @@
 import { Card } from '@/components/ui/card';
+import { Trophy } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AnimatedNumber } from '@/components/motion-primitives/animated-number';
+import { AppIcon } from '@/lib/iconMap';
 
 interface StreakCardProps {
   streakData: {
@@ -21,19 +23,19 @@ export function StreakCard({ streakData, getStreakIcon, getStreakMessage }: Stre
       <Card className="p-6 shadow-sm border border-border bg-muted/30">
         <div className="text-center">
           <div className="w-20 h-20 mx-auto rounded-full bg-muted flex items-center justify-center shadow-sm mb-4">
-            <span className="text-4xl opacity-60">🌰</span>
+            <AppIcon name="seed" size={36} className="text-muted-foreground opacity-70" />
           </div>
 
           <h3 className="font-bold text-lg text-primary mb-2">
             Plant Your Seed
           </h3>
-          
+
           <p className="text-sm text-muted-foreground mb-4 font-medium">
             Start tracking to grow your mindfulness habit!
           </p>
 
           <div className="text-xs text-muted-foreground bg-muted/20 rounded-lg p-3">
-            Track for consecutive days to watch your habit grow from a tiny seed into a beautiful flowering plant 🌸
+            Track for consecutive days to watch your habit grow from a tiny seed into a beautiful flowering plant
           </div>
         </div>
       </Card>
@@ -46,7 +48,7 @@ export function StreakCard({ streakData, getStreakIcon, getStreakMessage }: Stre
         <div className="relative mb-4">
           {/* Growth Visual */}
           <div className="w-20 h-20 mx-auto rounded-full bg-muted flex items-center justify-center shadow-sm">
-            <span className="text-4xl animate-bounce">{getStreakIcon()}</span>
+            <AppIcon name={getStreakIcon()} size={36} className="text-primary animate-bounce" />
           </div>
           
           {/* Streak Counter */}
@@ -89,7 +91,7 @@ export function StreakCard({ streakData, getStreakIcon, getStreakMessage }: Stre
         {streakData.longest > 0 && (
           <div className="mt-4 pt-4 border-t border-border/50">
             <div className="flex justify-center items-center gap-2">
-              <span className="text-lg">🏆</span>
+              <Trophy size={16} className="text-muted-foreground" />
               <span className="text-sm font-medium text-muted-foreground">
                 Best: {streakData.longest} days
               </span>

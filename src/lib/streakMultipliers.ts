@@ -12,10 +12,10 @@ export interface MultiplierTier {
 }
 
 export const MULTIPLIER_TIERS: MultiplierTier[] = [
-  { id: 'bronze-streak', name: 'Bronze Dedication', multiplier: 1.2, description: '+20% XP bonus', minStreak: 3, icon: '🥉' },
-  { id: 'silver-streak', name: 'Silver Consistency', multiplier: 1.5, description: '+50% XP bonus', minStreak: 7, icon: '🥈' },
-  { id: 'gold-streak', name: 'Gold Mastery', multiplier: 2.0, description: '2x XP bonus', minStreak: 14, icon: '🥇' },
-  { id: 'diamond-streak', name: 'Diamond Legend', multiplier: 3.0, description: '3x XP bonus', minStreak: 30, icon: '💎' },
+  { id: 'bronze-streak', name: 'Bronze Dedication', multiplier: 1.2, description: '+20% XP bonus', minStreak: 3, icon: 'medal' },
+  { id: 'silver-streak', name: 'Silver Consistency', multiplier: 1.5, description: '+50% XP bonus', minStreak: 7, icon: 'award' },
+  { id: 'gold-streak', name: 'Gold Mastery', multiplier: 2.0, description: '2x XP bonus', minStreak: 14, icon: 'trophy' },
+  { id: 'diamond-streak', name: 'Diamond Legend', multiplier: 3.0, description: '3x XP bonus', minStreak: 30, icon: 'gem' },
 ];
 
 /** Highest tier unlocked by the given streak, or null below bronze. */

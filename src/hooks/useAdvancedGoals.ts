@@ -104,7 +104,7 @@ export function useAdvancedGoals(currentStreak = 0) {
           difficulty: 'medium' as const,
           direction: 'decrease' as const,
           isActive: true,
-          icon: '🎯'
+          icon: 'target'
         },
         {
           id: 'weekly-reduction',
@@ -119,7 +119,7 @@ export function useAdvancedGoals(currentStreak = 0) {
           difficulty: 'medium' as const,
           direction: 'decrease' as const,
           isActive: true,
-          icon: '📈'
+          icon: 'trend-down'
         }
       ];
       setGoals(defaultGoals);
@@ -142,7 +142,7 @@ export function useAdvancedGoals(currentStreak = 0) {
           threshold: 7,
           type: 'consecutive_days' as const,
           celebrationMessage: 'Amazing! You\'ve built the foundation of mindful awareness!',
-          icon: '🏆',
+          icon: 'trophy',
           rewardPoints: 100
         },
         {
@@ -152,7 +152,7 @@ export function useAdvancedGoals(currentStreak = 0) {
           threshold: 25,
           type: 'total_reduction' as const,
           celebrationMessage: 'Incredible progress! You\'re mastering mindful consumption!',
-          icon: '🌟',
+          icon: 'star',
           rewardPoints: 250
         },
         {
@@ -162,7 +162,7 @@ export function useAdvancedGoals(currentStreak = 0) {
           threshold: 30,
           type: 'consecutive_days' as const,
           celebrationMessage: 'Outstanding dedication! You\'ve created a powerful habit!',
-          icon: '👑',
+          icon: 'crown',
           rewardPoints: 500
         }
       ];
@@ -214,7 +214,7 @@ export function useAdvancedGoals(currentStreak = 0) {
       difficulty: goalData.difficulty || 'medium',
       direction: goalData.direction ?? inferDirection(goalData.category),
       isActive: true,
-      icon: goalData.icon || '⭐',
+      icon: goalData.icon || 'star',
       ...goalData
     };
     
@@ -329,7 +329,7 @@ export function useAdvancedGoals(currentStreak = 0) {
         
         // Show milestone celebration
         import('sonner').then(({ toast }) => {
-          toast.success(`🎉 Milestone Achieved: ${milestone.title}!`, {
+          toast.success(`Milestone Achieved: ${milestone.title}!`, {
             description: milestone.celebrationMessage,
             duration: 6000
           });

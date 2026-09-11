@@ -1,8 +1,9 @@
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, Lock, Circle } from 'lucide-react';
+import { CheckCircle2, Lock, Circle, Workflow } from 'lucide-react';
 import { ProgressNode } from '@/hooks/useAdvancedGamification';
+import { AppIcon } from '@/lib/iconMap';
 
 interface ProgressTreeProps {
   nodes: ProgressNode[];
@@ -14,7 +15,7 @@ export function ProgressTree({ nodes }: ProgressTreeProps) {
   return (
     <Card className="p-6 shadow-sm border border-border bg-card">
       <h3 className="font-bold text-lg mb-6 flex items-center">
-        <span className="text-2xl mr-2">🌳</span>
+        <Workflow size={20} className="mr-2 text-primary" />
         Progress Tree
       </h3>
       
@@ -70,9 +71,11 @@ export function ProgressTree({ nodes }: ProgressTreeProps) {
                   
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className={`text-2xl ${node.isUnlocked ? '' : 'grayscale opacity-50'}`}>
-                        {node.icon}
-                      </span>
+                      <AppIcon
+                        name={node.icon}
+                        size={20}
+                        className={node.isUnlocked ? 'text-foreground' : 'text-muted-foreground opacity-50'}
+                      />
                       <h4 className={`font-bold text-lg ${
                         node.isCompleted ? 'text-green-700' : 
                         node.isUnlocked ? 'text-foreground' : 

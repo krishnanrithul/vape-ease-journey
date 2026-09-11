@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Plus } from 'lucide-react';
 import { Goal } from '@/hooks/useAdvancedGoals';
+import { AppIcon } from '@/lib/iconMap';
 
 interface CreateGoalDialogProps {
   onCreateGoal: (goalData: Partial<Goal>) => void;
@@ -22,7 +23,7 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
     period: 'week' as 'day' | 'week' | 'month' | 'custom',
     category: 'reduction' as 'reduction' | 'streak' | 'mindfulness' | 'milestone',
     difficulty: 'medium' as 'easy' | 'medium' | 'hard',
-    icon: '🎯',
+    icon: 'target',
     reward: '',
     endDate: ''
   });
@@ -63,13 +64,13 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
       period: 'week',
       category: 'reduction',
       difficulty: 'medium',
-      icon: '🎯',
+      icon: 'target',
       reward: '',
       endDate: ''
     });
   };
 
-  const goalIcons = ['🎯', '⭐', '🚀', '💪', '🌟', '🏆', '🎖️', '🔥', '⚡', '💎'];
+  const goalIcons = ['target', 'star', 'rocket', 'dumbbell', 'sparkles', 'trophy', 'medal', 'flame', 'zap', 'gem'];
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -180,13 +181,14 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
                   key={icon}
                   type="button"
                   onClick={() => setFormData(prev => ({ ...prev, icon }))}
-                  className={`w-10 h-10 rounded-lg border-2 flex items-center justify-center text-lg transition-all ${
-                    formData.icon === icon 
-                      ? 'border-primary bg-primary/10' 
-                      : 'border-muted hover:border-primary/50'
+                  className={`w-10 h-10 rounded-lg border-2 flex items-center justify-center transition-all ${
+                    formData.icon === icon
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-muted text-muted-foreground hover:border-primary/50'
                   }`}
+                  aria-label={icon}
                 >
-                  {icon}
+                  <AppIcon name={icon} size={18} />
                 </button>
               ))}
             </div>

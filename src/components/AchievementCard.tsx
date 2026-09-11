@@ -1,6 +1,8 @@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { AppIcon } from '@/lib/iconMap';
 
 interface AchievementCardProps {
   achievements: Array<{
@@ -24,7 +26,7 @@ export function AchievementCard({ achievements }: AchievementCardProps) {
       <Card className="p-6 shadow-sm border border-border bg-card">
         <div className="text-center">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/30 flex items-center justify-center">
-            <span className="text-2xl opacity-60">🏆</span>
+            <Trophy size={24} className="text-muted-foreground opacity-70" />
           </div>
           <h3 className="font-semibold text-foreground mb-2">Start Your Journey</h3>
           <p className="text-sm text-muted-foreground">
@@ -38,7 +40,7 @@ export function AchievementCard({ achievements }: AchievementCardProps) {
   return (
     <Card className="p-6 shadow-sm border border-border bg-card">
       <h3 className="font-bold text-lg mb-4 flex items-center">
-        <span className="text-2xl mr-2">🏆</span>
+        <Trophy size={20} className="mr-2 text-primary" />
         Recent Achievements
       </h3>
       
@@ -62,7 +64,7 @@ export function AchievementCard({ achievements }: AchievementCardProps) {
                 transition={{ type: 'spring', bounce: 0.5, delay: 0.1 }}
                 className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center shadow-sm"
               >
-                <span className="text-lg">{achievement.icon}</span>
+                <AppIcon name={achievement.icon} size={18} className="text-secondary-foreground" />
               </motion.div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">

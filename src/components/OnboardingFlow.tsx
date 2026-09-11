@@ -3,6 +3,7 @@ import { ArrowRight, ArrowLeft, Check, Minus, Plus } from 'lucide-react';
 import { AnimatedNumber } from '@/components/motion-primitives/animated-number';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { AppIcon } from '@/lib/iconMap';
 import onboardingWelcome from '@/assets/onboarding-welcome.jpg';
 
 interface OnboardingFlowProps {
@@ -24,7 +25,7 @@ const ONBOARDING_STEPS = [
     title: 'Our Supportive Approach',
     subtitle: 'Progress, not perfection',
     description: "Track your habits to build awareness. Small, gradual changes lead to lasting results. You're in control of your journey.",
-    icon: '🌱',
+    icon: 'sprout',
     features: [
       'Non-judgmental tracking',
       'Gradual reduction support',
@@ -37,7 +38,7 @@ const ONBOARDING_STEPS = [
     title: 'Your Data Stays Private',
     subtitle: 'Complete privacy guaranteed',
     description: "All your data stays on your device. We don't collect, share, or store any of your personal tracking information.",
-    icon: '🔒',
+    icon: 'lock',
     features: [
       'Local data storage only',
       'No account required',
@@ -50,14 +51,14 @@ const ONBOARDING_STEPS = [
     title: 'Where are you starting from?',
     subtitle: 'Roughly how many puffs a day right now?',
     description: "A rough guess is fine. We'll set your first daily goal about 10% below this so it feels achievable.",
-    icon: '🎯'
+    icon: 'target'
   },
   {
     id: 'ready',
     title: "You're All Set!",
     subtitle: 'Start your mindful journey',
     description: "Ready to begin? Remember: every step toward awareness is progress. Be kind to yourself along the way.",
-    icon: '✨',
+    icon: 'sparkles',
     cta: 'Start Tracking'
   }
 ];
@@ -115,7 +116,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             </div>
           ) : (
             <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-primary flex items-center justify-center shadow-sm">
-              <span className="text-3xl">{step.icon}</span>
+              {step.icon && <AppIcon name={step.icon} size={32} className="text-primary-foreground" />}
             </div>
           )}
 

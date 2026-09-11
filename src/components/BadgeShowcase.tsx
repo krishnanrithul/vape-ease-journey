@@ -1,7 +1,9 @@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Trophy } from 'lucide-react';
 import { Badge as BadgeType } from '@/hooks/useAdvancedGamification';
+import { AppIcon } from '@/lib/iconMap';
 
 interface BadgeShowcaseProps {
   badges: BadgeType[];
@@ -25,7 +27,7 @@ export function BadgeShowcase({ badges, title, emptyMessage }: BadgeShowcaseProp
       <Card className="p-6 shadow-sm border border-border bg-card">
         <div className="text-center">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/30 flex items-center justify-center">
-            <span className="text-2xl opacity-60">🏆</span>
+            <Trophy size={24} className="text-muted-foreground opacity-70" />
           </div>
           <h3 className="font-semibold text-foreground mb-2">{title}</h3>
           <p className="text-sm text-muted-foreground">{emptyMessage}</p>
@@ -37,7 +39,7 @@ export function BadgeShowcase({ badges, title, emptyMessage }: BadgeShowcaseProp
   return (
     <Card className="p-6 shadow-sm border border-border bg-card">
       <h3 className="font-bold text-lg mb-4 flex items-center">
-        <span className="text-2xl mr-2">🏆</span>
+        <Trophy size={20} className="mr-2 text-primary" />
         {title}
       </h3>
       
@@ -71,9 +73,11 @@ export function BadgeShowcase({ badges, title, emptyMessage }: BadgeShowcaseProp
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
                   isUnlocked ? 'bg-primary shadow-sm' : 'bg-muted/40'
                 } ${isUnlocked && badge.rarity === 'legendary' ? 'animate-pulse' : ''}`}>
-                  <span className={`text-2xl ${isUnlocked ? '' : 'grayscale opacity-50'}`}>
-                    {badge.icon}
-                  </span>
+                  <AppIcon
+                    name={badge.icon}
+                    size={22}
+                    className={isUnlocked ? 'text-primary-foreground' : 'text-muted-foreground opacity-50'}
+                  />
                 </div>
                 
                 <div className="flex-1">

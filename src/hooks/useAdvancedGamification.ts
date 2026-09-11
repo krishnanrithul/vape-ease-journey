@@ -53,7 +53,7 @@ export function useAdvancedGamification() {
         id: 'first-track',
         title: 'First Step',
         description: 'Begin your mindful journey',
-        icon: '🌱',
+        icon: 'sprout',
         rarity: 'common',
         category: 'tracking',
         criteria: 'Log your first session',
@@ -64,7 +64,7 @@ export function useAdvancedGamification() {
         id: 'week-warrior',
         title: 'Week Warrior',
         description: 'Track for 7 consecutive days',
-        icon: '⚔️',
+        icon: 'calendar-check',
         rarity: 'rare',
         category: 'consistency',
         criteria: 'Maintain 7-day tracking streak',
@@ -75,7 +75,7 @@ export function useAdvancedGamification() {
         id: 'reduction-champion',
         title: 'Reduction Champion',
         description: 'Achieve 50% reduction from baseline',
-        icon: '🏆',
+        icon: 'trophy',
         rarity: 'epic',
         category: 'reduction',
         criteria: 'Reduce usage by 50%',
@@ -86,7 +86,7 @@ export function useAdvancedGamification() {
         id: 'mindful-master',
         title: 'Mindful Master',
         description: 'Complete 30 days of conscious tracking',
-        icon: '🧘',
+        icon: 'flower',
         rarity: 'legendary',
         category: 'milestone',
         criteria: 'Track mindfully for 30 days',
@@ -97,7 +97,7 @@ export function useAdvancedGamification() {
         id: 'goal-crusher',
         title: 'Goal Crusher',
         description: 'Meet your daily goal 10 times',
-        icon: '💪',
+        icon: 'dumbbell',
         rarity: 'rare',
         category: 'milestone',
         criteria: 'Achieve daily goals 10 times',
@@ -108,7 +108,7 @@ export function useAdvancedGamification() {
         id: 'insight-seeker',
         title: 'Insight Seeker',
         description: 'View insights 20 times',
-        icon: '🔍',
+        icon: 'search',
         rarity: 'common',
         category: 'tracking',
         criteria: 'Check insights regularly',
@@ -119,7 +119,7 @@ export function useAdvancedGamification() {
         id: 'streak-legend',
         title: 'Streak Legend',
         description: 'Maintain a 30-day streak',
-        icon: '🔥',
+        icon: 'flame',
         rarity: 'legendary',
         category: 'consistency',
         criteria: 'Achieve 30-day tracking streak',
@@ -130,7 +130,7 @@ export function useAdvancedGamification() {
         id: 'early-bird',
         title: 'Early Bird',
         description: 'Log sessions before 9 AM ten times',
-        icon: '🐦',
+        icon: 'bird',
         rarity: 'rare',
         category: 'special',
         criteria: 'Track early morning sessions',
@@ -147,7 +147,7 @@ export function useAdvancedGamification() {
         id: 'awareness-foundation',
         title: 'Awareness Foundation',
         description: 'Build basic tracking habits',
-        icon: '🌱',
+        icon: 'sprout',
         level: 1,
         isUnlocked: true,
         isCompleted: false,
@@ -159,7 +159,7 @@ export function useAdvancedGamification() {
         id: 'mindful-observer',
         title: 'Mindful Observer',
         description: 'Develop consistent tracking patterns',
-        icon: '👁️',
+        icon: 'eye',
         level: 2,
         isUnlocked: false,
         isCompleted: false,
@@ -171,7 +171,7 @@ export function useAdvancedGamification() {
         id: 'pattern-detective',
         title: 'Pattern Detective',
         description: 'Identify usage patterns and triggers',
-        icon: '🔍',
+        icon: 'search',
         level: 3,
         isUnlocked: false,
         isCompleted: false,
@@ -183,7 +183,7 @@ export function useAdvancedGamification() {
         id: 'reduction-architect',
         title: 'Reduction Architect',
         description: 'Master gradual reduction techniques',
-        icon: '🏗️',
+        icon: 'hammer',
         level: 4,
         isUnlocked: false,
         isCompleted: false,
@@ -195,7 +195,7 @@ export function useAdvancedGamification() {
         id: 'mindful-master',
         title: 'Mindful Master',
         description: 'Achieve mastery through sustained practice',
-        icon: '🧘‍♂️',
+        icon: 'bloom',
         level: 5,
         isUnlocked: false,
         isCompleted: false,
@@ -267,7 +267,7 @@ export function useAdvancedGamification() {
           
           // Show notification
           import('sonner').then(({ toast }) => {
-            toast.success(`🏆 Badge Unlocked: ${badge.title}!`, {
+            toast.success(`Badge Unlocked: ${badge.title}!`, {
               description: `You earned ${points} points! ${badge.description}`,
               duration: 5000
             });
@@ -314,7 +314,7 @@ export function useAdvancedGamification() {
           
           // Show completion notification
           import('sonner').then(({ toast }) => {
-            toast.success(`🌟 Progress Milestone: ${node.title}!`, {
+            toast.success(`Progress Milestone: ${node.title}!`, {
               description: `Unlocked: ${node.rewards.join(', ')}`,
               duration: 4000
             });

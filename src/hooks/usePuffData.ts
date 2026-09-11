@@ -148,12 +148,12 @@ export function usePuffData() {
     const daysTracked = new Set(puffs.map(p => p.timestamp.toDateString())).size;
 
     const possibleAchievements = [
-      { id: 'first-log', title: 'First Step', description: 'Logged your first puff', icon: '🌱', type: 'milestone' as const },
-      { id: 'week-tracking', title: 'Week Warrior', description: '7 days of tracking', icon: '🌿', type: 'milestone' as const },
-      { id: 'month-tracking', title: 'Monthly Master', description: '30 days of tracking', icon: '🌸', type: 'milestone' as const },
-      { id: 'goal-met', title: 'Goal Getter', description: 'Met your daily goal', icon: '🎯', type: 'goal' as const },
-      { id: 'streak-3', title: 'Consistency King', description: '3 day streak of tracking', icon: '🔥', type: 'streak' as const },
-      { id: 'streak-7', title: 'Week Streak', description: '7 day tracking streak', icon: '⚡', type: 'streak' as const },
+      { id: 'first-log', title: 'First Step', description: 'Logged your first puff', icon: 'sprout', type: 'milestone' as const },
+      { id: 'week-tracking', title: 'Week Warrior', description: '7 days of tracking', icon: 'sapling', type: 'milestone' as const },
+      { id: 'month-tracking', title: 'Monthly Master', description: '30 days of tracking', icon: 'flower', type: 'milestone' as const },
+      { id: 'goal-met', title: 'Goal Getter', description: 'Met your daily goal', icon: 'target', type: 'goal' as const },
+      { id: 'streak-3', title: 'Consistency King', description: '3 day streak of tracking', icon: 'flame', type: 'streak' as const },
+      { id: 'streak-7', title: 'Week Streak', description: '7 day tracking streak', icon: 'zap', type: 'streak' as const },
     ];
 
     possibleAchievements.forEach(achievement => {
@@ -321,14 +321,15 @@ export function usePuffData() {
     return `You're averaging ${avgDaily} puffs on the days you've tracked this week.`;
   };
 
+  /** Growth-stage icon key (rendered via AppIcon) — same plant metaphor, outline icon set. */
   const getStreakIcon = () => {
     const streak = streakData.current;
-    if (streak === 0) return '🌰'; // seed
-    if (streak <= 2) return '🌱'; // sprout
-    if (streak <= 6) return '🌿'; // sapling
-    if (streak <= 13) return '🌳'; // young tree
-    if (streak <= 29) return '🌸'; // flowering
-    return '🌺'; // full bloom
+    if (streak === 0) return 'seed';
+    if (streak <= 2) return 'sprout';
+    if (streak <= 6) return 'sapling';
+    if (streak <= 13) return 'tree';
+    if (streak <= 29) return 'flower';
+    return 'bloom';
   };
 
   const getStreakMessage = () => {
