@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
-import { applyMultiplier } from '@/lib/streakMultipliers';
+import { useState, useEffect } from 'react';
 import { safeParse } from '@/lib/safeStorage';
 
 export interface Goal {
@@ -48,48 +47,19 @@ const inferDirection = (category?: Goal['category']): Goal['direction'] =>
   category === 'reduction' ? 'decrease' : 'increase';
 
 /**
- * Icon key for each built-in goal/milestone, by id — the single source of
- * truth for the default objects below AND for refreshing the `icon` field
- * on anything already sitting in localStorage from before the emoji ->
- * icon-key migration (2026-09-11). Without the refresh, a goal or milestone
- * created in an earlier session keeps its old emoji forever; AppIcon doesn't
- * recognize it and silently falls back to the same generic icon for all of
- * them, which looks like "every icon is broken" rather than what it is.
+ * Icon key for each built-in goal, by id — the single source of truth for the
+ * default objects below AND for refreshing the `icon` field on anything
+ * already sitting in localStorage from before the emoji -> icon-key
+ * migration (2026-09-11).
  */
 const BUILTIN_GOAL_ICONS: Record<string, string> = {
   'daily-reduction': 'target',
   'weekly-reduction': 'trend-down',
 };
-const BUILTIN_MILESTONE_ICONS: Record<string, string> = {
-  'first-week': 'trophy',
-  'reduction-hero': 'star',
-  'consistency-master': 'crown',
-};
 
-export interface Milestone {
-  id: string;
-  title: string;
-  description: string;
-  threshold: number;
-  type: 'consecutive_days' | 'total_reduction' | 'weekly_average' | 'custom';
-  celebrationMessage: string;
-  icon: string;
-  rewardPoints: number;
-  completedAt?: Date;
-}
-
-/**
- * @param currentStreak Used to apply the streak XP multiplier when goals and
- * milestones award points. Pass `streakData.current` from usePuffData.
- */
-export function useAdvancedGoals(currentStreak = 0) {
-  const streakRef = useRef(currentStreak);
-  streakRef.current = currentStreak;
+export function useAdvancedGoals() {
   const [hydrated, setHydrated] = useState(false);
   const [goals, setGoals] = useState<Goal[]>([]);
-  const [milestones, setMilestones] = useState<Milestone[]>([]);
-  const [userLevel, setUserLevel] = useState(1);
-  const [experiencePoints, setExperiencePoints] = useState(0);
 
   useEffect(() => {
     type StoredGoal = Omit<Goal, 'startDate' | 'endDate' | 'completedAt' | 'direction'> & {
@@ -145,59 +115,6 @@ export function useAdvancedGoals(currentStreak = 0) {
       setGoals(defaultGoals);
     }
 
-    type StoredMilestone = Omit<Milestone, 'completedAt'> & { completedAt?: string };
-    const storedMilestones = safeParse<StoredMilestone[] | null>('milestones', null);
-    if (storedMilestones) {
-      setMilestones(storedMilestones.map(m => ({
-        ...m,
-        icon: BUILTIN_MILESTONE_ICONS[m.id] ?? m.icon,
-        completedAt: m.completedAt ? new Date(m.completedAt) : undefined
-      })));
-    } else {
-      // Initialize with default milestones
-      const defaultMilestones = [
-        {
-          id: 'first-week',
-          title: 'First Week Champion',
-          description: 'Complete your first week of tracking',
-          threshold: 7,
-          type: 'consecutive_days' as const,
-          celebrationMessage: 'Amazing! You\'ve built the foundation of mindful awareness!',
-          icon: BUILTIN_MILESTONE_ICONS['first-week'],
-          rewardPoints: 100
-        },
-        {
-          id: 'reduction-hero',
-          title: 'Reduction Hero',
-          description: 'Achieve 25% reduction from your baseline',
-          threshold: 25,
-          type: 'total_reduction' as const,
-          celebrationMessage: 'Incredible progress! You\'re mastering mindful consumption!',
-          icon: BUILTIN_MILESTONE_ICONS['reduction-hero'],
-          rewardPoints: 250
-        },
-        {
-          id: 'consistency-master',
-          title: 'Consistency Master',
-          description: 'Maintain tracking for 30 consecutive days',
-          threshold: 30,
-          type: 'consecutive_days' as const,
-          celebrationMessage: 'Outstanding dedication! You\'ve created a powerful habit!',
-          icon: BUILTIN_MILESTONE_ICONS['consistency-master'],
-          rewardPoints: 500
-        }
-      ];
-      setMilestones(defaultMilestones);
-    }
-
-    const storedUserData = safeParse<{ level?: number; experiencePoints?: number } | null>(
-      'user-progress',
-      null
-    );
-    if (storedUserData) {
-      setUserLevel(storedUserData.level || 1);
-      setExperiencePoints(storedUserData.experiencePoints || 0);
-    }
     setHydrated(true);
   }, []);
 
@@ -206,19 +123,6 @@ export function useAdvancedGoals(currentStreak = 0) {
     if (!hydrated) return;
     localStorage.setItem('advanced-goals', JSON.stringify(goals));
   }, [goals, hydrated]);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    localStorage.setItem('milestones', JSON.stringify(milestones));
-  }, [milestones, hydrated]);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    localStorage.setItem('user-progress', JSON.stringify({
-      level: userLevel,
-      experiencePoints
-    }));
-  }, [userLevel, experiencePoints, hydrated]);
 
   const createCustomGoal = (goalData: Partial<Goal>) => {
     const newGoal: Goal = {
@@ -238,29 +142,9 @@ export function useAdvancedGoals(currentStreak = 0) {
       icon: goalData.icon || 'star',
       ...goalData
     };
-    
+
     setGoals(prev => [...prev, newGoal]);
     return newGoal;
-  };
-
-  const awardXp = (difficulty: Goal['difficulty']) => {
-    const base = difficulty === 'hard' ? 150 : difficulty === 'medium' ? 100 : 50;
-    const points = applyMultiplier(base, streakRef.current);
-    setExperiencePoints(prev => {
-      const newTotal = prev + points;
-      const newLevel = Math.floor(newTotal / 500) + 1;
-      if (newLevel > userLevel) {
-        setUserLevel(newLevel);
-        import('sonner').then(({ toast }) => {
-          toast.success(`Level Up! You're now level ${newLevel}!`, {
-            description: 'Your dedication is paying off!',
-            duration: 5000
-          });
-        });
-      }
-      return newTotal;
-    });
-    return points;
   };
 
   const updateGoalProgress = (goalId: string, progress: number) => {
@@ -287,11 +171,10 @@ export function useAdvancedGoals(currentStreak = 0) {
           const succeeded = g.current <= g.target;
           if (succeeded && g.lastEvaluatedKey !== g.periodKey) {
             next.lastEvaluatedKey = g.periodKey;
-            const points = awardXp(g.difficulty);
             import('sonner').then(({ toast }) => {
               toast.success(
                 `You stayed under your ${g.period === 'day' ? 'daily' : 'weekly'} limit!`,
-                { description: `You earned ${points} XP!`, duration: 4000 }
+                { description: 'Nice work — keep it up.', duration: 4000 }
               );
             });
           }
@@ -300,12 +183,8 @@ export function useAdvancedGoals(currentStreak = 0) {
         // One-off "reach the target" goals complete as soon as they hit it.
         if (g.direction === 'increase' && !g.completedAt && progress >= g.target) {
           next.completedAt = new Date();
-          const points = awardXp(g.difficulty);
           import('sonner').then(({ toast }) => {
-            toast.success(`Goal Completed: ${g.title}!`, {
-              description: `You earned ${points} XP!`,
-              duration: 4000
-            });
+            toast.success(`Goal Completed: ${g.title}!`, { duration: 4000 });
           });
         }
 
@@ -319,8 +198,8 @@ export function useAdvancedGoals(currentStreak = 0) {
    * truth outside this hook (the app's daily-goal setting). Without this,
    * a goal created with the default target — e.g. the built-in "Daily
    * Mindful Limit" at 20 — never moves even after the user changes their
-   * real daily goal, so its "stayed under the limit" XP and its `current`
-   * ratio quietly track the wrong number forever.
+   * real daily goal, so its "stayed under the limit" tracking and its
+   * `current` ratio quietly track the wrong number forever.
    */
   const setGoalTarget = (goalId: string, target: number) => {
     setGoals(prev => {
@@ -331,7 +210,7 @@ export function useAdvancedGoals(currentStreak = 0) {
   };
 
   const toggleGoal = (goalId: string) => {
-    setGoals(prev => prev.map(goal => 
+    setGoals(prev => prev.map(goal =>
       goal.id === goalId ? { ...goal, isActive: !goal.isActive } : goal
     ));
   };
@@ -340,69 +219,18 @@ export function useAdvancedGoals(currentStreak = 0) {
     setGoals(prev => prev.filter(goal => goal.id !== goalId));
   };
 
-  const checkMilestones = (consecutiveDays: number, reductionPercent: number) => {
-    milestones.forEach(milestone => {
-      if (milestone.completedAt) return;
-      
-      let shouldComplete = false;
-      
-      switch (milestone.type) {
-        case 'consecutive_days':
-          shouldComplete = consecutiveDays >= milestone.threshold;
-          break;
-        case 'total_reduction':
-          shouldComplete = reductionPercent >= milestone.threshold;
-          break;
-      }
-      
-      if (shouldComplete) {
-        setMilestones(prev => prev.map(m => 
-          m.id === milestone.id 
-            ? { ...m, completedAt: new Date() }
-            : m
-        ));
-        
-        setExperiencePoints(prev => prev + applyMultiplier(milestone.rewardPoints, streakRef.current));
-        
-        // Show milestone celebration
-        import('sonner').then(({ toast }) => {
-          toast.success(`Milestone Achieved: ${milestone.title}!`, {
-            description: milestone.celebrationMessage,
-            duration: 6000
-          });
-        });
-      }
-    });
-  };
-
   const getActiveGoals = () => goals.filter(goal => goal.isActive && !goal.completedAt);
   const getCompletedGoals = () => goals.filter(goal => goal.completedAt);
-  const getCompletedMilestones = () => milestones.filter(m => m.completedAt);
-  const getPendingMilestones = () => milestones.filter(m => !m.completedAt);
-
-  const getProgressToNextLevel = () => {
-    const currentLevelXP = (userLevel - 1) * 500;
-    const nextLevelXP = userLevel * 500;
-    const progress = ((experiencePoints - currentLevelXP) / 500) * 100;
-    return Math.min(progress, 100);
-  };
 
   return {
     hydrated,
     goals,
-    milestones,
-    userLevel,
-    experiencePoints,
     createCustomGoal,
     updateGoalProgress,
     setGoalTarget,
     toggleGoal,
     deleteGoal,
-    checkMilestones,
     getActiveGoals,
-    getCompletedGoals,
-    getCompletedMilestones,
-    getPendingMilestones,
-    getProgressToNextLevel
+    getCompletedGoals
   };
 }

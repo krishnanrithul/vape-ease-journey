@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { safeParse, safeParseInt } from '@/lib/safeStorage';
+import { INSIGHTS_VIEWS_KEY } from '@/lib/storageKeys';
 
 export interface PuffEntry {
   id: string;
@@ -14,25 +15,41 @@ export interface Achievement {
   title: string;
   description: string;
   icon: string;
-  unlockedAt?: Date;
   type: 'milestone' | 'streak' | 'goal';
+  /** Target value for `progress` — every achievement has one, even binary ones (maxProgress: 1). */
+  maxProgress: number;
+  progress?: number;
+  unlockedAt?: Date;
 }
 
 /**
- * Single source of truth for each built-in achievement's icon key, used both
- * to define `possibleAchievements` below and to refresh the `icon` field on
- * achievements already sitting in localStorage from before the emoji ->
- * icon-key migration (2026-09-11) — otherwise an achievement unlocked in an
- * earlier session keeps its old emoji forever, which AppIcon doesn't
- * recognize and silently renders as the generic fallback icon.
+ * Single source of truth for every achievement: definition (title, copy, icon,
+ * target) AND, at hydration time, the sole authority that overrides whatever
+ * a stale localStorage entry claims. This app used to spread three separate,
+ * overlapping reward systems across three hooks (this one's Achievements, a
+ * Badges list, and a Goals-hook Milestones list) that tracked nearly
+ * identical behaviors ("logged your first puff" / "tracked 7 days" / etc.)
+ * under different ids, thresholds, and a meaningless rarity taxonomy. They've
+ * been merged into this single list — one entry per distinct accomplishment.
  */
-const ACHIEVEMENT_ICONS: Record<string, string> = {
-  'first-log': 'sprout',
-  'week-tracking': 'sapling',
-  'month-tracking': 'flower',
-  'goal-met': 'target',
-  'streak-3': 'flame',
-  'streak-7': 'zap',
+const ACHIEVEMENT_DEFS: Omit<Achievement, 'progress' | 'unlockedAt'>[] = [
+  { id: 'first-log', title: 'First Step', description: 'Logged your first puff', icon: 'sprout', type: 'milestone', maxProgress: 1 },
+  { id: 'streak-3', title: '3-Day Streak', description: 'Tracked 3 days in a row', icon: 'flame', type: 'streak', maxProgress: 3 },
+  { id: 'streak-7', title: 'Week Warrior', description: 'Tracked 7 days in a row', icon: 'calendar-check', type: 'streak', maxProgress: 7 },
+  { id: 'streak-30', title: 'Month Master', description: 'Tracked 30 days in a row', icon: 'crown', type: 'streak', maxProgress: 30 },
+  { id: 'goal-met', title: 'Goal Getter', description: 'Stayed under your daily limit', icon: 'target', type: 'goal', maxProgress: 1 },
+  { id: 'goal-crusher', title: 'Goal Crusher', description: 'Stayed under your limit 10 times', icon: 'dumbbell', type: 'goal', maxProgress: 10 },
+  { id: 'reduction-hero', title: 'Reduction Hero', description: 'Reduced 25% below your baseline', icon: 'trend-down', type: 'goal', maxProgress: 25 },
+  { id: 'reduction-champion', title: 'Reduction Champion', description: 'Reduced 50% below your baseline', icon: 'trophy', type: 'goal', maxProgress: 50 },
+  { id: 'insight-seeker', title: 'Insight Seeker', description: 'Viewed your insights 20 times', icon: 'search', type: 'milestone', maxProgress: 20 },
+  { id: 'early-bird', title: 'Early Bird', description: 'Logged before 9am ten times', icon: 'bird', type: 'milestone', maxProgress: 10 },
+];
+
+/** Old ids from the pre-consolidation Achievements/Badges/Milestones split, so anyone
+ * who already earned progress under an old id doesn't lose it in the merge. */
+const OLD_ID_REMAP: Record<string, string> = {
+  'week-tracking': 'streak-7',
+  'month-tracking': 'streak-30',
 };
 
 export interface StreakData {
@@ -101,15 +118,28 @@ export function usePuffData() {
 
     setDailyGoal(safeParseInt('daily-goal', 20));
 
-    type StoredAchievement = Omit<Achievement, 'unlockedAt'> & { unlockedAt?: string };
-    const storedAchievements = safeParse<StoredAchievement[]>('achievements', []);
-    if (storedAchievements.length) {
-      setAchievements(storedAchievements.map(a => ({
-        ...a,
-        icon: ACHIEVEMENT_ICONS[a.id] ?? a.icon,
-        unlockedAt: a.unlockedAt ? new Date(a.unlockedAt) : undefined
-      })));
-    }
+    // Merge stored progress/unlock state onto the current definitions, keyed by id
+    // (remapping old pre-consolidation ids first) — title/description/icon/maxProgress
+    // always come from ACHIEVEMENT_DEFS so a copy or icon fix here reaches everyone,
+    // and only the per-user progress/unlockedAt fields are ever read from storage.
+    type StoredAchievement = { id: string; progress?: number; unlockedAt?: string };
+    const storedRaw = safeParse<StoredAchievement[]>('achievements', []);
+    const storedById = new Map<string, StoredAchievement>();
+    storedRaw.forEach(a => {
+      const id = OLD_ID_REMAP[a.id] ?? a.id;
+      const existing = storedById.get(id);
+      if (!existing || (a.unlockedAt && !existing.unlockedAt)) {
+        storedById.set(id, { ...a, id });
+      }
+    });
+    setAchievements(ACHIEVEMENT_DEFS.map(def => {
+      const stored = storedById.get(def.id);
+      return {
+        ...def,
+        progress: stored?.progress,
+        unlockedAt: stored?.unlockedAt ? new Date(stored.unlockedAt) : undefined,
+      };
+    }));
 
     const storedStreak = safeParse<StreakData | null>('streak-data', null);
     if (storedStreak) {
@@ -160,72 +190,78 @@ export function usePuffData() {
     else localStorage.removeItem('baseline-puffs');
   };
 
-  const checkAchievements = (newPuffCount: number) => {
+  /**
+   * Recompute every achievement's progress from current app state and unlock
+   * anything that just crossed its target. Runs reactively (see the effect
+   * below) rather than only right after logging a puff, since several of
+   * these depend on things that change independently of that (baseline,
+   * insight-page views, day rollover).
+   */
+  const refreshAchievements = () => {
+    const totalPuffs = puffs.reduce((sum, p) => sum + p.count, 0);
     const today = new Date().toDateString();
-    const totalPuffs = puffs.reduce((sum, p) => sum + p.count, 0) + newPuffCount;
-    const daysTracked = new Set(puffs.map(p => p.timestamp.toDateString())).size;
+    const puffsByDay = new Map<string, number>();
+    puffs.forEach(p => {
+      const day = p.timestamp.toDateString();
+      puffsByDay.set(day, (puffsByDay.get(day) || 0) + p.count);
+    });
+    // "Under your limit" only counts finished days, never the still-in-progress today.
+    const daysUnderLimit = [...puffsByDay.entries()].filter(
+      ([day, count]) => day !== today && count <= dailyGoal
+    ).length;
+    const earlyMorningSessions = puffs.filter(p => p.timestamp.getHours() < 9).length;
+    const insightViews = safeParseInt(INSIGHTS_VIEWS_KEY, 0);
 
-    const possibleAchievements = [
-      { id: 'first-log', title: 'First Step', description: 'Logged your first puff', icon: ACHIEVEMENT_ICONS['first-log'], type: 'milestone' as const },
-      { id: 'week-tracking', title: 'Week Warrior', description: '7 days of tracking', icon: ACHIEVEMENT_ICONS['week-tracking'], type: 'milestone' as const },
-      { id: 'month-tracking', title: 'Monthly Master', description: '30 days of tracking', icon: ACHIEVEMENT_ICONS['month-tracking'], type: 'milestone' as const },
-      { id: 'goal-met', title: 'Goal Getter', description: 'Met your daily goal', icon: ACHIEVEMENT_ICONS['goal-met'], type: 'goal' as const },
-      { id: 'streak-3', title: 'Consistency King', description: '3 day streak of tracking', icon: ACHIEVEMENT_ICONS['streak-3'], type: 'streak' as const },
-      { id: 'streak-7', title: 'Week Streak', description: '7 day tracking streak', icon: ACHIEVEMENT_ICONS['streak-7'], type: 'streak' as const },
-    ];
+    let reductionPercent = 0;
+    if (baseline && baseline > 0) {
+      const week = getWeeklyData().filter(d => d.puffs > 0);
+      if (week.length > 0) {
+        const avg = week.reduce((sum, d) => sum + d.puffs, 0) / week.length;
+        reductionPercent = Math.max(0, ((baseline - avg) / baseline) * 100);
+      }
+    }
 
-    possibleAchievements.forEach(achievement => {
-      const alreadyUnlocked = achievements.some(a => a.id === achievement.id);
-      if (alreadyUnlocked) return;
+    const progressById: Record<string, number> = {
+      'first-log': totalPuffs >= 1 ? 1 : 0,
+      'streak-3': streakData.current,
+      'streak-7': streakData.current,
+      'streak-30': streakData.current,
+      'goal-met': daysUnderLimit >= 1 ? 1 : 0,
+      'goal-crusher': daysUnderLimit,
+      'reduction-hero': Math.round(reductionPercent),
+      'reduction-champion': Math.round(reductionPercent),
+      'insight-seeker': insightViews,
+      'early-bird': earlyMorningSessions,
+    };
 
-      let shouldUnlock = false;
-      
-      switch (achievement.id) {
-        case 'first-log':
-          shouldUnlock = totalPuffs >= 1;
-          break;
-        case 'week-tracking':
-          shouldUnlock = daysTracked >= 7;
-          break;
-        case 'month-tracking':
-          shouldUnlock = daysTracked >= 30;
-          break;
-        case 'goal-met': {
-          // "Met your daily goal" = completed a full past day at or under the limit.
-          // Evaluated end-of-day, never on the current (still in-progress) day.
-          const today = new Date().toDateString();
-          const puffsByDay = new Map<string, number>();
-          puffs.forEach(p => {
-            const day = p.timestamp.toDateString();
-            puffsByDay.set(day, (puffsByDay.get(day) || 0) + p.count);
+    setAchievements(prev => {
+      let changed = false;
+      const next = prev.map(a => {
+        const progress = Math.min(progressById[a.id] ?? 0, a.maxProgress);
+        const nowUnlocked = !a.unlockedAt && progress >= a.maxProgress;
+        if (progress === a.progress && !nowUnlocked) return a;
+        changed = true;
+        const updated: Achievement = { ...a, progress };
+        if (nowUnlocked) {
+          updated.unlockedAt = new Date();
+          import('sonner').then(({ toast }) => {
+            toast.success(`Achievement Unlocked: ${a.title}!`, {
+              description: a.description,
+              duration: 4000
+            });
           });
-          shouldUnlock = [...puffsByDay.entries()].some(
-            ([day, count]) => day !== today && count <= dailyGoal
-          );
-          break;
         }
-        case 'streak-3':
-          shouldUnlock = streakData.current >= 3;
-          break;
-        case 'streak-7':
-          shouldUnlock = streakData.current >= 7;
-          break;
-      }
-
-      if (shouldUnlock) {
-        const newAchievement = { ...achievement, unlockedAt: new Date() };
-        setAchievements(prev => [...prev, newAchievement]);
-        
-        // Show toast notification
-        import('sonner').then(({ toast }) => {
-          toast.success(`Achievement Unlocked: ${achievement.title}!`, {
-            description: achievement.description,
-            duration: 4000
-          });
-        });
-      }
+        return updated;
+      });
+      return changed ? next : prev;
     });
   };
+
+  useEffect(() => {
+    if (!hydrated) return;
+    refreshAchievements();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated, puffs, streakData, dailyGoal, baseline]);
 
   const updateStreak = () => {
     const { current, longest } = computeStreaks(puffs);
@@ -248,7 +284,6 @@ export function usePuffData() {
       mood
     };
     setPuffs(prev => [newPuff, ...prev]);
-    checkAchievements(count);
     return newPuff.id;
   };
 
@@ -303,7 +338,7 @@ export function usePuffData() {
       const dayPuffs = puffs
         .filter(puff => puff.timestamp.toDateString() === dateStr)
         .reduce((total, puff) => total + puff.count, 0);
-      
+
       last7Days.push({
         date: date.toLocaleDateString('en-US', { weekday: 'short' }),
         puffs: dayPuffs
@@ -367,6 +402,13 @@ export function usePuffData() {
       .slice(0, 3);
   };
 
+  const getUnlockedAchievements = () =>
+    achievements
+      .filter(a => a.unlockedAt)
+      .sort((a, b) => (b.unlockedAt?.getTime() || 0) - (a.unlockedAt?.getTime() || 0));
+
+  const getPendingAchievements = () => achievements.filter(a => !a.unlockedAt);
+
   return {
     puffs,
     hydrated,
@@ -387,6 +429,8 @@ export function usePuffData() {
     streakData,
     getStreakIcon,
     getStreakMessage,
-    getRecentAchievements
+    getRecentAchievements,
+    getUnlockedAchievements,
+    getPendingAchievements
   };
 }
