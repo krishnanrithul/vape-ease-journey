@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Minus, Plus, Sun, Moon, Monitor, Download, Trash2, RotateCcw, ChevronLeft, History } from 'lucide-react';
+import { Minus, Plus, Sun, Moon, Monitor, Download, Trash2, RotateCcw, ChevronLeft, History, Bell } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -19,8 +19,22 @@ import { usePuffData } from '@/hooks/usePuffData';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { useTheme } from '@/hooks/useTheme';
 import { AnimatedNumber } from '@/components/motion-primitives/animated-number';
+import { Switch } from '@/components/ui/switch';
+import {
+  getReminderHour,
+  isReminderEnabled,
+  isReminderSupported,
+  setReminderEnabled,
+  setReminderHour,
+} from '@/lib/reminders';
 
 const MAX_GOAL = 200;
+
+function formatHour(h: number) {
+  const suffix = h < 12 ? 'AM' : 'PM';
+  const twelve = h % 12 === 0 ? 12 : h % 12;
+  return `${twelve}:00 ${suffix}`;
+}
 
 function Stepper({
   value,
@@ -129,6 +143,31 @@ export default function Settings() {
     navigate('/');
   };
 
+  const reminderSupported = isReminderSupported();
+  const [reminderOn, setReminderOn] = useState(isReminderEnabled());
+  const [reminderHour, setReminderHourState] = useState(getReminderHour());
+
+  const notifyReminderChanged = () => window.dispatchEvent(new Event('vape-reminder-changed'));
+
+  const handleReminderToggle = async (next: boolean) => {
+    const enabled = await setReminderEnabled(next);
+    setReminderOn(enabled);
+    notifyReminderChanged();
+    if (next && !enabled) {
+      toast.error('Notifications are blocked for this site', {
+        description: 'Allow them in your browser or phone settings, then try again.',
+      });
+    } else {
+      toast.success(enabled ? `Daily reminder on at ${formatHour(reminderHour)}` : 'Daily reminder off');
+    }
+  };
+
+  const handleReminderHour = (hour: number) => {
+    setReminderHour(hour);
+    setReminderHourState(hour);
+    notifyReminderChanged();
+  };
+
   const themeOptions = [
     { value: 'light' as const, label: 'Light', icon: Sun },
     { value: 'dark' as const, label: 'Dark', icon: Moon },
@@ -193,6 +232,43 @@ export default function Settings() {
               ))}
             </div>
           </Row>
+        </Section>
+
+        <Section title="Reminders">
+          <Row
+            label="Daily reminder"
+            hint={
+              !reminderSupported
+                ? 'Not supported in this browser'
+                : 'A nudge to log if you haven’t yet. Fires while the app is open or installed.'
+            }
+          >
+            <Switch
+              checked={reminderOn}
+              onCheckedChange={handleReminderToggle}
+              disabled={!reminderSupported}
+              aria-label="Toggle daily reminder"
+            />
+          </Row>
+          {reminderOn && (
+            <Row label="Remind me at">
+              <div className="flex items-center gap-2">
+                <Bell size={16} className="text-muted-foreground" />
+                <select
+                  value={reminderHour}
+                  onChange={(e) => handleReminderHour(Number(e.target.value))}
+                  className="h-9 rounded-md border border-border bg-background px-2 text-sm"
+                  aria-label="Reminder hour"
+                >
+                  {Array.from({ length: 24 }, (_, h) => (
+                    <option key={h} value={h}>
+                      {formatHour(h)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </Row>
+          )}
         </Section>
 
         <Section title="Data">

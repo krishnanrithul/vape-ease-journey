@@ -4,11 +4,10 @@ import { Plus, Minus, TrendingUp, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { usePuffData } from '@/hooks/usePuffData';
-import { useOnboarding } from '@/hooks/useOnboarding';
 import { AchievementCard } from '@/components/AchievementCard';
 import { StreakCard } from '@/components/StreakCard';
-import { OnboardingFlow } from '@/components/OnboardingFlow';
 import { EmptyState } from '@/components/EmptyState';
+import { PageSkeleton } from '@/components/PageSkeleton';
 import { AnimatedNumber } from '@/components/motion-primitives/animated-number';
 import { TextEffect } from '@/components/motion-primitives/text-effect';
 import { RingGauge } from '@/components/RingGauge';
@@ -18,9 +17,8 @@ import emptyStateTracking from '@/assets/empty-state-tracking.jpg';
 
 export default function Home() {
   const navigate = useNavigate();
-  const { addPuff, removePuff, getTodaysPuffs, dailyGoal, setDailyGoal, setBaseline, achievements, streakData, getStreakIcon, getStreakMessage, puffs } = usePuffData();
+  const { addPuff, removePuff, getTodaysPuffs, dailyGoal, achievements, streakData, getStreakIcon, getStreakMessage, puffs, hydrated } = usePuffData();
   const MAX_QUICK_COUNT = 20;
-  const { hasSeenOnboarding, completeOnboarding } = useOnboarding();
   const [quickCount, setQuickCount] = useState(1);
   const [logOpen, setLogOpen] = useState(false);
   
@@ -28,29 +26,7 @@ export default function Home() {
   const progressPercent = Math.min((todaysPuffs / dailyGoal) * 100, 100);
   const hasAnyData = puffs.length > 0;
 
-  // Show onboarding for first-time users
-  if (hasSeenOnboarding === false) {
-    return (
-      <OnboardingFlow
-        onComplete={(baseline) => {
-          if (baseline && baseline > 0) {
-            setBaseline(baseline);
-            setDailyGoal(Math.max(1, Math.round(baseline * 0.9)));
-          }
-          completeOnboarding();
-        }}
-      />
-    );
-  }
-
-  // Show loading state while checking onboarding status
-  if (hasSeenOnboarding === null) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      </div>
-    );
-  }
+  if (!hydrated) return <PageSkeleton cards={2} />;
 
   const handlePuffLog = () => {
     const logged = quickCount;

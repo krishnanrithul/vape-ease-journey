@@ -13,11 +13,11 @@ Status legend: [ ] todo · [~] partial · [x] done
 
 ## 2. Should-have
 
-- [ ] **Daily reminder notification** — one optional local notification (e.g. 9pm: "Log today?"). Web Notifications API for PWA; Capacitor LocalNotifications for native.
-- [ ] **Unobtainable badges** — `reduction-champion`, `insight-seeker`, `goal-crusher` have no progress path. Either implement (insight-seeker needs a view counter; goal-crusher needs more goal-type achievements) or remove them.
-- [ ] **Streak multipliers actually apply** — `calculateTotalMultiplier()` exists in `useAdvancedGamification` but XP is awarded in `useAdvancedGoals` at 1×. Wire them together or drop the multiplier UI copy.
-- [ ] **Lock BottomNav/Header during onboarding** — they render outside `<Routes>` so a first-time user can tap into Goals/Insights before finishing onboarding.
-- [~] **Loading skeletons** — hooks now expose `hydrated` and no longer write before load; skeleton UI still todo. — hooks return `[]` for one render before localStorage hydrates; pages flash their empty state. A tiny `isHydrated` flag per hook + skeleton fixes it.
+- [x] **Daily reminder notification** — Settings → Reminders: toggle + hour picker. Web Notifications API via the service worker, so it works for the PWA and while a tab is open; catch-up check on foreground if the hour passed and nothing was logged. Native follow-up: `npm i @capacitor/local-notifications` and swap `src/lib/reminders.ts` to schedule through it so it fires with the app closed (iOS WKWebView does not support web notifications).
+- [x] **Unobtainable badges** — all three now have real progress sources: `reduction-champion` = % below baseline (tracked-day week average), `goal-crusher` = completed days with logs that stayed under the daily limit, `insight-seeker` = Insights page visit counter (`vape-insights-views`).
+- [x] **Streak multipliers actually apply** — tiers live in `src/lib/streakMultipliers.ts`; `useAdvancedGoals(streak)` applies them to goal + milestone XP, `useAdvancedGamification` applies them to badge points. Both hooks read the same table so the UI copy is now true.
+- [x] **Lock BottomNav/Header during onboarding** — onboarding state moved to `OnboardingProvider` (context) and `App.tsx` renders `OnboardingFlow` *instead of* the shell until it's done. Settings → Restart flips the same state.
+- [x] **Loading skeletons** — `PageSkeleton` on Home, Insights, Goals, Gamification; `useAdvancedGoals` / `useAdvancedGamification` now expose `hydrated` and no longer write to storage before load.
 
 ## 3. Only if you want multi-device / backup
 
@@ -30,8 +30,19 @@ Status legend: [ ] todo · [~] partial · [x] done
 - [ ] `NotFound.tsx` — off-brand styling, uses `<a href="/">` (full reload) instead of `<Link>`.
 - [ ] Code-split routes (`React.lazy`) — main chunk is ~975 kB; Recharts alone is a big share.
 - [ ] Add a few tests around `usePuffData` streak/rollover logic before touching it again.
+- [ ] Two point systems coexist: goal/milestone XP (`user-progress`, Goals page) and badge points (`total-gamification-points`, Rewards page). Merge into one or label them distinctly.
+
+## 5. App Store release checklist
+
+- [ ] Section 4 cleanup (dead code, `any` types) — reviewers flag console noise.
+- [ ] `@capacitor/local-notifications` for the reminder on iOS (see Section 2 note).
+- [ ] `npm run build && npx cap add ios && npx cap sync ios`, open `ios/App/App.xcworkspace`, set bundle ID + signing team.
+- [ ] Assets: 1024×1024 icon (no alpha), 6.7" + 6.1" screenshots, privacy policy URL ("all data stored on device"), age rating questionnaire, description/keywords.
+- [ ] TestFlight build → real-device pass on iOS 16+ → submit.
 
 ## Done in this pass (for reference)
+
+- [x] Section 2 complete: reminders, badge sources, applied multipliers, onboarding gate, skeletons + hydration guards on goals/gamification hooks
 
 - [x] v1 must-haves: Settings (/settings, gear in header), History (/history) with edit/delete + undo, baseline step in onboarding → first goal = 90% of baseline, streak algorithm rewritten (old one capped at 2) + recompute on foreground, PWA (manifest, icons, autoUpdate SW, font caching)
 

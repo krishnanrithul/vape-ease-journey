@@ -8,11 +8,13 @@ import { usePuffData } from '@/hooks/usePuffData';
 import { useAdvancedGoals } from '@/hooks/useAdvancedGoals';
 import { GoalCard } from '@/components/GoalCard';
 import { CreateGoalDialog } from '@/components/CreateGoalDialog';
+import { PageSkeleton } from '@/components/PageSkeleton';
 import { toast } from 'sonner';
 
 export default function Goals() {
-  const { dailyGoal, setDailyGoal, getTodaysPuffs, getWeeklyData, streakData, puffs, baseline } = usePuffData();
+  const { dailyGoal, setDailyGoal, getTodaysPuffs, getWeeklyData, streakData, puffs, baseline, hydrated: puffsHydrated } = usePuffData();
   const {
+    hydrated,
     goals,
     milestones,
     userLevel,
@@ -27,7 +29,7 @@ export default function Goals() {
     getPendingMilestones,
     getCompletedMilestones,
     getProgressToNextLevel
-  } = useAdvancedGoals();
+  } = useAdvancedGoals(streakData.current);
   
   const [newGoal, setNewGoal] = useState(dailyGoal);
 
@@ -86,6 +88,8 @@ export default function Goals() {
     const recommended = Math.max(1, Math.floor(weekAvg * 0.9)); // 10% reduction
     setNewGoal(recommended);
   };
+
+  if (!hydrated || !puffsHydrated) return <PageSkeleton />;
 
   return (
     <div className="min-h-screen bg-background pb-32">

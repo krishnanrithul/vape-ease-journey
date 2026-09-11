@@ -2,6 +2,10 @@ import { Card } from '@/components/ui/card';
 import { usePuffData } from '@/hooks/usePuffData';
 import { AnimatedChart } from '@/components/AnimatedChart';
 import { EmptyState } from '@/components/EmptyState';
+import { PageSkeleton } from '@/components/PageSkeleton';
+import { useEffect } from 'react';
+import { INSIGHTS_VIEWS_KEY } from '@/lib/storageKeys';
+import { safeParseInt } from '@/lib/safeStorage';
 import { useNavigate } from 'react-router-dom';
 import { TrendingDown, Calendar, Target, Trophy, BarChart3, Flame, Sun, CalendarDays } from 'lucide-react';
 import { StatsCarousel, StatItem } from '@/components/StatsCarousel';
@@ -9,7 +13,12 @@ import emptyStateInsights from '@/assets/empty-state-insights.jpg';
 
 export default function Insights() {
   const navigate = useNavigate();
-  const { getWeeklyData, getInsight, getTodaysPuffs, dailyGoal, achievements, getRecentAchievements, puffs, streakData } = usePuffData();
+  const { getWeeklyData, getInsight, getTodaysPuffs, dailyGoal, achievements, getRecentAchievements, puffs, streakData, hydrated } = usePuffData();
+
+  // Count visits for the Insight Seeker badge.
+  useEffect(() => {
+    localStorage.setItem(INSIGHTS_VIEWS_KEY, String(safeParseInt(INSIGHTS_VIEWS_KEY, 0) + 1));
+  }, []);
   
   const weeklyData = getWeeklyData();
   const insight = getInsight();
@@ -30,6 +39,8 @@ export default function Insights() {
     { key: 'best', label: 'Best day', value: bestDay?.puffs ?? 0, unit: 'puffs', icon: Target, tone: 'success', hint: bestDay ? `${bestDay.date} this week` : 'No data yet' },
     { key: 'streak', label: 'Streak', value: streakData.current, unit: streakData.current === 1 ? 'day' : 'days', icon: Flame, tone: 'primary', hint: `Best: ${streakData.longest}` },
   ];
+
+  if (!hydrated) return <PageSkeleton />;
 
   // Show empty state when no data exists
   if (!hasAnyData) {

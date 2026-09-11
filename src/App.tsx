@@ -7,6 +7,10 @@ import { AnimatePresence, motion, MotionConfig } from "motion/react";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AppHeader } from "@/components/AppHeader";
+import { OnboardingProvider, useOnboarding } from "@/hooks/useOnboarding";
+import { OnboardingFlow } from "@/components/OnboardingFlow";
+import { usePuffData } from "@/hooks/usePuffData";
+import { useReminderScheduler } from "@/hooks/useReminderScheduler";
 import Home from "./pages/Home";
 import Insights from "./pages/Insights";
 import Goals from "./pages/Goals";
@@ -47,6 +51,48 @@ function AnimatedRoutes() {
   );
 }
 
+/**
+ * Gate the whole shell (header + nav + routes) behind onboarding so a
+ * first-time user can't tap into Goals/Insights before finishing the intro.
+ */
+function AppShell() {
+  const { hasSeenOnboarding, completeOnboarding } = useOnboarding();
+  const { setBaseline, setDailyGoal, getTodaysPuffs } = usePuffData();
+  useReminderScheduler(() => getTodaysPuffs() > 0);
+
+  if (hasSeenOnboarding === null) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (hasSeenOnboarding === false) {
+    return (
+      <OnboardingFlow
+        onComplete={(baseline) => {
+          if (baseline && baseline > 0) {
+            setBaseline(baseline);
+            setDailyGoal(Math.max(1, Math.round(baseline * 0.9)));
+          }
+          completeOnboarding();
+        }}
+      />
+    );
+  }
+
+  return (
+    <div className="min-h-screen w-full">
+      <AppHeader />
+      <main className="flex-1">
+        <AnimatedRoutes />
+      </main>
+      <BottomNav />
+    </div>
+  );
+}
+
 const App = () => (
   <MotionConfig reducedMotion="user">
   <ThemeProvider defaultTheme="system">
@@ -56,13 +102,9 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <ErrorBoundary>
-            <div className="min-h-screen w-full">
-              <AppHeader />
-              <main className="flex-1">
-                <AnimatedRoutes />
-              </main>
-              <BottomNav />
-            </div>
+            <OnboardingProvider>
+              <AppShell />
+            </OnboardingProvider>
           </ErrorBoundary>
         </BrowserRouter>
       </TooltipProvider>

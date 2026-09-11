@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { MULTIPLIER_TIERS, applyMultiplier, tierForStreak } from '@/lib/streakMultipliers';
 import { safeParse, safeParseInt } from '@/lib/safeStorage';
 
 export interface Badge {
@@ -42,6 +43,8 @@ export function useAdvancedGamification() {
   const [streakMultipliers, setStreakMultipliers] = useState<StreakMultiplier[]>([]);
   const [progressTree, setProgressTree] = useState<ProgressNode[]>([]);
   const [totalPoints, setTotalPoints] = useState(0);
+  const [hydrated, setHydrated] = useState(false);
+  const streakRef = useRef(0);
 
   useEffect(() => {
     // Initialize badges
@@ -136,45 +139,7 @@ export function useAdvancedGamification() {
       }
     ];
 
-    // Initialize streak multipliers
-    const defaultMultipliers: StreakMultiplier[] = [
-      {
-        id: 'bronze-streak',
-        name: 'Bronze Dedication',
-        multiplier: 1.2,
-        description: '+20% XP bonus',
-        minStreak: 3,
-        icon: '🥉',
-        isActive: false
-      },
-      {
-        id: 'silver-streak',
-        name: 'Silver Consistency',
-        multiplier: 1.5,
-        description: '+50% XP bonus',
-        minStreak: 7,
-        icon: '🥈',
-        isActive: false
-      },
-      {
-        id: 'gold-streak',
-        name: 'Gold Mastery',
-        multiplier: 2.0,
-        description: '2x XP bonus',
-        minStreak: 14,
-        icon: '🥇',
-        isActive: false
-      },
-      {
-        id: 'diamond-streak',
-        name: 'Diamond Legend',
-        multiplier: 3.0,
-        description: '3x XP bonus',
-        minStreak: 30,
-        icon: '💎',
-        isActive: false
-      }
-    ];
+    const defaultMultipliers: StreakMultiplier[] = MULTIPLIER_TIERS.map(t => ({ ...t, isActive: false }));
 
     // Initialize progress tree
     const defaultProgressTree: ProgressNode[] = [
@@ -259,23 +224,29 @@ export function useAdvancedGamification() {
     setProgressTree(storedProgressTree ?? defaultProgressTree);
 
     setTotalPoints(safeParseInt('total-gamification-points', 0));
+    setHydrated(true);
   }, []);
 
+  // Never write before hydration — otherwise the initial empty state clobbers storage.
   useEffect(() => {
+    if (!hydrated) return;
     localStorage.setItem('gamification-badges', JSON.stringify(badges));
-  }, [badges]);
+  }, [badges, hydrated]);
 
   useEffect(() => {
+    if (!hydrated) return;
     localStorage.setItem('streak-multipliers', JSON.stringify(streakMultipliers));
-  }, [streakMultipliers]);
+  }, [streakMultipliers, hydrated]);
 
   useEffect(() => {
+    if (!hydrated) return;
     localStorage.setItem('progress-tree', JSON.stringify(progressTree));
-  }, [progressTree]);
+  }, [progressTree, hydrated]);
 
   useEffect(() => {
+    if (!hydrated) return;
     localStorage.setItem('total-gamification-points', totalPoints.toString());
-  }, [totalPoints]);
+  }, [totalPoints, hydrated]);
 
   const updateBadgeProgress = (badgeId: string, progress: number) => {
     setBadges(prev => prev.map(badge => {
@@ -287,9 +258,10 @@ export function useAdvancedGamification() {
           updatedBadge.unlockedAt = new Date();
           
           // Award points based on rarity
-          const points = badge.rarity === 'legendary' ? 500 : 
+          const base = badge.rarity === 'legendary' ? 500 :
                         badge.rarity === 'epic' ? 300 :
                         badge.rarity === 'rare' ? 150 : 50;
+          const points = applyMultiplier(base, streakRef.current);
           
           setTotalPoints(prev => prev + points);
           
@@ -309,17 +281,19 @@ export function useAdvancedGamification() {
   };
 
   const updateStreakMultipliers = (currentStreak: number) => {
-    setStreakMultipliers(prev => prev.map(multiplier => ({
-      ...multiplier,
-      isActive: currentStreak >= multiplier.minStreak
-    })));
+    streakRef.current = currentStreak;
+    setStreakMultipliers(prev => {
+      const next = prev.map(multiplier => ({
+        ...multiplier,
+        isActive: currentStreak >= multiplier.minStreak
+      }));
+      return next.every((m, i) => m.isActive === prev[i]?.isActive) ? prev : next;
+    });
   };
 
   const getActiveMultiplier = () => {
-    const activeMultipliers = streakMultipliers.filter(m => m.isActive);
-    return activeMultipliers.length > 0 
-      ? activeMultipliers.reduce((max, curr) => curr.multiplier > max.multiplier ? curr : max)
-      : null;
+    const tier = tierForStreak(streakRef.current);
+    return tier ? streakMultipliers.find(m => m.id === tier.id) ?? { ...tier, isActive: true } : null;
   };
 
   const updateProgressTree = (nodeId: string, progressPercent: number) => {
@@ -364,6 +338,7 @@ export function useAdvancedGamification() {
   };
 
   return {
+    hydrated,
     badges,
     streakMultipliers,
     progressTree,

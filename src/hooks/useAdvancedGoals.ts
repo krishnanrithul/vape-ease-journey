@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { applyMultiplier } from '@/lib/streakMultipliers';
 import { safeParse } from '@/lib/safeStorage';
 
 export interface Goal {
@@ -58,7 +59,14 @@ export interface Milestone {
   completedAt?: Date;
 }
 
-export function useAdvancedGoals() {
+/**
+ * @param currentStreak Used to apply the streak XP multiplier when goals and
+ * milestones award points. Pass `streakData.current` from usePuffData.
+ */
+export function useAdvancedGoals(currentStreak = 0) {
+  const streakRef = useRef(currentStreak);
+  streakRef.current = currentStreak;
+  const [hydrated, setHydrated] = useState(false);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [userLevel, setUserLevel] = useState(1);
@@ -169,22 +177,27 @@ export function useAdvancedGoals() {
       setUserLevel(storedUserData.level || 1);
       setExperiencePoints(storedUserData.experiencePoints || 0);
     }
+    setHydrated(true);
   }, []);
 
+  // Never write before hydration — otherwise the initial empty state clobbers storage.
   useEffect(() => {
+    if (!hydrated) return;
     localStorage.setItem('advanced-goals', JSON.stringify(goals));
-  }, [goals]);
+  }, [goals, hydrated]);
 
   useEffect(() => {
+    if (!hydrated) return;
     localStorage.setItem('milestones', JSON.stringify(milestones));
-  }, [milestones]);
+  }, [milestones, hydrated]);
 
   useEffect(() => {
+    if (!hydrated) return;
     localStorage.setItem('user-progress', JSON.stringify({
       level: userLevel,
       experiencePoints
     }));
-  }, [userLevel, experiencePoints]);
+  }, [userLevel, experiencePoints, hydrated]);
 
   const createCustomGoal = (goalData: Partial<Goal>) => {
     const newGoal: Goal = {
@@ -210,7 +223,8 @@ export function useAdvancedGoals() {
   };
 
   const awardXp = (difficulty: Goal['difficulty']) => {
-    const points = difficulty === 'hard' ? 150 : difficulty === 'medium' ? 100 : 50;
+    const base = difficulty === 'hard' ? 150 : difficulty === 'medium' ? 100 : 50;
+    const points = applyMultiplier(base, streakRef.current);
     setExperiencePoints(prev => {
       const newTotal = prev + points;
       const newLevel = Math.floor(newTotal / 500) + 1;
@@ -311,7 +325,7 @@ export function useAdvancedGoals() {
             : m
         ));
         
-        setExperiencePoints(prev => prev + milestone.rewardPoints);
+        setExperiencePoints(prev => prev + applyMultiplier(milestone.rewardPoints, streakRef.current));
         
         // Show milestone celebration
         import('sonner').then(({ toast }) => {
@@ -337,6 +351,7 @@ export function useAdvancedGoals() {
   };
 
   return {
+    hydrated,
     goals,
     milestones,
     userLevel,

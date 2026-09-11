@@ -8,9 +8,13 @@ import { useAdvancedGamification } from '@/hooks/useAdvancedGamification';
 import { usePuffData } from '@/hooks/usePuffData';
 import { BadgeShowcase } from '@/components/BadgeShowcase';
 import { ProgressTree } from '@/components/ProgressTree';
+import { PageSkeleton } from '@/components/PageSkeleton';
+import { INSIGHTS_VIEWS_KEY } from '@/lib/storageKeys';
+import { safeParseInt } from '@/lib/safeStorage';
 
 export default function Gamification() {
   const { 
+    hydrated,
     badges,
     streakMultipliers, 
     progressTree,
@@ -26,27 +30,48 @@ export default function Gamification() {
     calculateTotalMultiplier
   } = useAdvancedGamification();
   
-  const { puffs, streakData, getTodaysPuffs, achievements } = usePuffData();
+  const { puffs, streakData, achievements, dailyGoal, baseline, getWeeklyData, hydrated: puffsHydrated } = usePuffData();
 
   // Update gamification progress based on app usage
   useEffect(() => {
     const totalSessions = puffs.length;
     const consecutiveDays = streakData.current;
-    const todaysPuffs = getTodaysPuffs();
+
+    // Set the streak first so badge points awarded below use the right multiplier.
+    updateStreakMultipliers(consecutiveDays);
+
+    // Reduction Champion: % below baseline, using the tracked-day weekly average.
+    if (baseline && baseline > 0) {
+      const week = getWeeklyData().filter(d => d.puffs > 0);
+      if (week.length > 0) {
+        const avg = week.reduce((sum, d) => sum + d.puffs, 0) / week.length;
+        const reduction = Math.max(0, ((baseline - avg) / baseline) * 100);
+        updateBadgeProgress('reduction-champion', Math.round(reduction));
+      }
+    }
+
+    // Goal Crusher: completed days (not today) with logs that stayed under the daily limit.
+    const today = new Date().toDateString();
+    const totalsByDay = new Map<string, number>();
+    puffs.forEach(p => {
+      const key = p.timestamp.toDateString();
+      if (key !== today) totalsByDay.set(key, (totalsByDay.get(key) ?? 0) + p.count);
+    });
+    const daysUnderLimit = [...totalsByDay.values()].filter(total => total <= dailyGoal).length;
+    updateBadgeProgress('goal-crusher', daysUnderLimit);
+
+    // Insight Seeker: Insights page visits (counter incremented in Insights.tsx).
+    updateBadgeProgress('insight-seeker', safeParseInt(INSIGHTS_VIEWS_KEY, 0));
     
     // Update badge progress
     updateBadgeProgress('first-track', totalSessions > 0 ? 1 : 0);
     updateBadgeProgress('week-warrior', consecutiveDays);
     updateBadgeProgress('mindful-master', consecutiveDays);
     updateBadgeProgress('streak-legend', consecutiveDays);
-    updateBadgeProgress('goal-crusher', achievements.filter(a => a.type === 'goal').length);
     
     // Count early morning sessions (before 9 AM)
     const earlyMorningSessions = puffs.filter(puff => puff.timestamp.getHours() < 9).length;
     updateBadgeProgress('early-bird', earlyMorningSessions);
-    
-    // Update streak multipliers
-    updateStreakMultipliers(consecutiveDays);
     
     // Update progress tree based on various metrics
     const trackingDays = new Set(puffs.map(p => p.timestamp.toDateString())).size;
@@ -76,7 +101,9 @@ export default function Gamification() {
     if (consecutiveDays >= 60) {
       updateProgressTree('mindful-master', Math.min((consecutiveDays / 90) * 100, 100));
     }
-  }, [puffs, streakData, achievements]);
+  }, [puffs, streakData, achievements, dailyGoal, baseline]);
+
+  if (!hydrated || !puffsHydrated) return <PageSkeleton />;
 
   const unlockedBadges = getUnlockedBadges();
   const pendingBadges = getPendingBadges();
