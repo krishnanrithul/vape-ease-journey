@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { safeParse, safeParseInt } from '@/lib/safeStorage';
-import { INSIGHTS_VIEWS_KEY } from '@/lib/storageKeys';
 
 export interface PuffEntry {
   id: string;
@@ -40,9 +39,6 @@ const ACHIEVEMENT_DEFS: Omit<Achievement, 'progress' | 'unlockedAt'>[] = [
   { id: 'goal-met', title: 'Goal Getter', description: 'Stayed under your daily limit', icon: 'target', type: 'goal', maxProgress: 1 },
   { id: 'goal-crusher', title: 'Goal Crusher', description: 'Stayed under your limit 10 times', icon: 'dumbbell', type: 'goal', maxProgress: 10 },
   { id: 'reduction-hero', title: 'Reduction Hero', description: 'Reduced 25% below your baseline', icon: 'trend-down', type: 'goal', maxProgress: 25 },
-  { id: 'reduction-champion', title: 'Reduction Champion', description: 'Reduced 50% below your baseline', icon: 'trophy', type: 'goal', maxProgress: 50 },
-  { id: 'insight-seeker', title: 'Insight Seeker', description: 'Viewed your insights 20 times', icon: 'search', type: 'milestone', maxProgress: 20 },
-  { id: 'early-bird', title: 'Early Bird', description: 'Logged before 9am ten times', icon: 'bird', type: 'milestone', maxProgress: 10 },
 ];
 
 /** Old ids from the pre-consolidation Achievements/Badges/Milestones split, so anyone
@@ -209,8 +205,6 @@ export function usePuffData() {
     const daysUnderLimit = [...puffsByDay.entries()].filter(
       ([day, count]) => day !== today && count <= dailyGoal
     ).length;
-    const earlyMorningSessions = puffs.filter(p => p.timestamp.getHours() < 9).length;
-    const insightViews = safeParseInt(INSIGHTS_VIEWS_KEY, 0);
 
     let reductionPercent = 0;
     if (baseline && baseline > 0) {
@@ -229,9 +223,6 @@ export function usePuffData() {
       'goal-met': daysUnderLimit >= 1 ? 1 : 0,
       'goal-crusher': daysUnderLimit,
       'reduction-hero': Math.round(reductionPercent),
-      'reduction-champion': Math.round(reductionPercent),
-      'insight-seeker': insightViews,
-      'early-bird': earlyMorningSessions,
     };
 
     setAchievements(prev => {
