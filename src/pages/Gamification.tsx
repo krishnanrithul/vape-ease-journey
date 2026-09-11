@@ -7,6 +7,7 @@ import { Star, Crown, Zap, Trophy } from 'lucide-react';
 import { useAdvancedGamification } from '@/hooks/useAdvancedGamification';
 import { usePuffData } from '@/hooks/usePuffData';
 import { BadgeShowcase } from '@/components/BadgeShowcase';
+import { BadgeStack } from '@/components/BadgeStack';
 import { ProgressTree } from '@/components/ProgressTree';
 import { PageSkeleton } from '@/components/PageSkeleton';
 import { INSIGHTS_VIEWS_KEY } from '@/lib/storageKeys';
@@ -182,7 +183,7 @@ export default function Gamification() {
               emptyMessage="No badges unlocked yet. Start tracking to earn your first badge!"
             />
             
-            <BadgeShowcase 
+            <BadgeStack
               badges={pendingBadges}
               title="Available Badges"
               emptyMessage="All badges unlocked! You're a champion!"
