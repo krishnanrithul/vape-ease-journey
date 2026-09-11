@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 export function AppHeader() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background">
-      <div className="flex h-14 items-center justify-between px-6">
+      <div className="mx-auto w-full max-w-lg flex h-14 items-center justify-between px-6">
         <Link to="/" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
             <Leaf size={16} className="text-primary-foreground" />

@@ -12,7 +12,7 @@ export function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-md z-50 transition-colors duration-300">
-      <div className="flex justify-around py-2 px-2">
+      <div className="mx-auto w-full max-w-lg flex justify-around py-2 px-2">
         {navItems.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}

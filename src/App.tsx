@@ -85,7 +85,8 @@ function AppShell() {
   return (
     <div className="min-h-screen w-full">
       <AppHeader />
-      <main className="flex-1">
+      {/* Phone-first layout: cap the content column on tablet/desktop */}
+      <main className="flex-1 mx-auto w-full max-w-lg">
         <AnimatedRoutes />
       </main>
       <BottomNav />

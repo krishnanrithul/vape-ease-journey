@@ -57,7 +57,7 @@ export function StatsCarousel({ items, className }: { items: StatItem[]; classNa
           {items.map(({ key, label, value, unit, icon: Icon, tone = 'default', hint }) => (
             <div
               key={key}
-              className="min-w-0 flex-[0_0_72%] sm:flex-[0_0_220px] rounded-lg border border-border bg-card p-5"
+              className="min-w-0 flex-[0_0_72%] sm:flex-[0_0_calc(50%-6px)] rounded-lg border border-border bg-card p-5"
             >
               <div className="flex items-center justify-between mb-4">
                 <span className="label-meta">{label}</span>
