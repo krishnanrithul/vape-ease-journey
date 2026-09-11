@@ -2,7 +2,6 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { AppIcon } from '@/lib/iconMap';
 
 interface AchievementCardProps {
   achievements: Array<{
@@ -58,14 +57,6 @@ export function AchievementCard({ achievements }: AchievementCardProps) {
                 index === 0 ? 'border-secondary/50 ring-1 ring-secondary/30' : 'border-secondary/20'
               }`}
             >
-              <motion.div
-                initial={index === 0 ? { scale: 0 } : false}
-                animate={{ scale: 1 }}
-                transition={{ type: 'spring', bounce: 0.5, delay: 0.1 }}
-                className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center shadow-sm"
-              >
-                <AppIcon name={achievement.icon} size={18} className="text-secondary-foreground" />
-              </motion.div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <h4 className="font-semibold text-sm">{achievement.title}</h4>
