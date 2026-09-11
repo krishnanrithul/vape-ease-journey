@@ -1,8 +1,8 @@
 import { Card } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Trophy, Target } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 import { AppIcon } from '@/lib/iconMap';
 import { usePuffData } from '@/hooks/usePuffData';
+import { AchievementStack } from '@/components/AchievementStack';
 import { PageSkeleton } from '@/components/PageSkeleton';
 
 export default function Gamification() {
@@ -48,34 +48,11 @@ export default function Gamification() {
           </div>
         )}
 
-        {pending.length > 0 && (
-          <div>
-            <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
-              <Target size={18} className="text-primary" />
-              In Progress
-            </h3>
-            <div className="space-y-3">
-              {pending.map(a => (
-                <Card key={a.id} className="p-4 shadow-sm border border-border bg-card">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center shrink-0">
-                      <AppIcon name={a.icon} size={22} className="text-muted-foreground" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-bold text-foreground">{a.title}</h4>
-                      <p className="text-sm text-muted-foreground">{a.description}</p>
-                    </div>
-                  </div>
-                  <div className="flex justify-between text-xs mb-1 text-muted-foreground">
-                    <span>Progress</span>
-                    <span>{Math.min(a.progress ?? 0, a.maxProgress)} / {a.maxProgress}</span>
-                  </div>
-                  <Progress value={Math.min(((a.progress ?? 0) / a.maxProgress) * 100, 100)} className="h-2" />
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
+        <AchievementStack
+          achievements={pending}
+          title="In Progress"
+          emptyMessage="All achievements unlocked! You're a champion!"
+        />
       </div>
     </div>
   );
