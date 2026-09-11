@@ -128,13 +128,10 @@ export default function Insights() {
             </h2>
             <div className="space-y-3">
               {recentAchievements.map((achievement) => (
-                <div 
+                <div
                   key={achievement.id}
                   className="flex items-center gap-3 p-3 rounded-lg bg-secondary/10 border border-secondary/20"
                 >
-                  <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center shadow-sm">
-                    <span className="text-lg">{achievement.icon}</span>
-                  </div>
                   <div className="flex-1">
                     <h4 className="font-semibold text-sm">{achievement.title}</h4>
                     <p className="text-xs text-muted-foreground">{achievement.description}</p>
