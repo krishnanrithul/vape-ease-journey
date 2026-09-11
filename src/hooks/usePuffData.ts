@@ -31,22 +31,51 @@ export interface Achievement {
  * under different ids, thresholds, and a meaningless rarity taxonomy. They've
  * been merged into this single list — one entry per distinct accomplishment.
  */
+/**
+ * The streak achievement is one card that advances through checkpoints
+ * rather than three separate cards for 3/7/30 days — those were the same
+ * underlying number (your current streak) shown three times. Title,
+ * description, icon and target all come from whichever tier is currently
+ * being worked toward; only the final tier actually "unlocks" the card.
+ */
+const STREAK_TIERS: { threshold: number; title: string; description: string; icon: string }[] = [
+  { threshold: 3, title: '3-Day Streak', description: 'Tracked 3 days in a row', icon: 'flame' },
+  { threshold: 7, title: 'Week Warrior', description: 'Tracked 7 days in a row', icon: 'calendar-check' },
+  { threshold: 30, title: 'Month Master', description: 'Tracked 30 days in a row', icon: 'crown' },
+];
+const streakTierFor = (streak: number) =>
+  STREAK_TIERS.find(t => streak < t.threshold) ?? STREAK_TIERS[STREAK_TIERS.length - 1];
+
 const ACHIEVEMENT_DEFS: Omit<Achievement, 'progress' | 'unlockedAt'>[] = [
   { id: 'first-log', title: 'First Step', description: 'Logged your first puff', icon: 'sprout', type: 'milestone', maxProgress: 1 },
-  { id: 'streak-3', title: '3-Day Streak', description: 'Tracked 3 days in a row', icon: 'flame', type: 'streak', maxProgress: 3 },
-  { id: 'streak-7', title: 'Week Warrior', description: 'Tracked 7 days in a row', icon: 'calendar-check', type: 'streak', maxProgress: 7 },
-  { id: 'streak-30', title: 'Month Master', description: 'Tracked 30 days in a row', icon: 'crown', type: 'streak', maxProgress: 30 },
+  {
+    id: 'streak-milestones',
+    title: STREAK_TIERS[0].title,
+    description: STREAK_TIERS[0].description,
+    icon: STREAK_TIERS[0].icon,
+    type: 'streak',
+    maxProgress: STREAK_TIERS[0].threshold
+  },
   { id: 'goal-met', title: 'Goal Getter', description: 'Stayed under your daily limit', icon: 'target', type: 'goal', maxProgress: 1 },
   { id: 'goal-crusher', title: 'Goal Crusher', description: 'Stayed under your limit 10 times', icon: 'dumbbell', type: 'goal', maxProgress: 10 },
   { id: 'reduction-hero', title: 'Reduction Hero', description: 'Reduced 25% below your baseline', icon: 'trend-down', type: 'goal', maxProgress: 25 },
 ];
 
 /** Old ids from the pre-consolidation Achievements/Badges/Milestones split, so anyone
- * who already earned progress under an old id doesn't lose it in the merge. */
+ * who already earned progress under an old id doesn't lose it in the merge. The three
+ * separate streak-tier ids (streak-3/streak-7/streak-30, plus their even older
+ * Achievements/Badges/Milestones equivalents) all fold into the one tiered card. */
 const OLD_ID_REMAP: Record<string, string> = {
-  'week-tracking': 'streak-7',
-  'month-tracking': 'streak-30',
+  'week-tracking': 'streak-milestones',
+  'month-tracking': 'streak-milestones',
+  'streak-3': 'streak-milestones',
+  'streak-7': 'streak-milestones',
+  'streak-30': 'streak-milestones',
 };
+/** Old ids that only ever represented the FINAL streak tier — the only ones whose
+ * unlock should carry over as "streak-milestones is fully unlocked". A completed
+ * streak-3 or streak-7 doesn't mean the new, harder 30-day bar has been cleared. */
+const STREAK_TOP_TIER_OLD_IDS = new Set(['streak-30', 'month-tracking', 'consistency-master']);
 
 export interface StreakData {
   current: number;
@@ -123,9 +152,11 @@ export function usePuffData() {
     const storedById = new Map<string, StoredAchievement>();
     storedRaw.forEach(a => {
       const id = OLD_ID_REMAP[a.id] ?? a.id;
+      const countsAsUnlock = id !== 'streak-milestones' || STREAK_TOP_TIER_OLD_IDS.has(a.id);
+      const effective = countsAsUnlock ? a : { ...a, unlockedAt: undefined };
       const existing = storedById.get(id);
-      if (!existing || (a.unlockedAt && !existing.unlockedAt)) {
-        storedById.set(id, { ...a, id });
+      if (!existing || (effective.unlockedAt && !existing.unlockedAt)) {
+        storedById.set(id, { ...effective, id });
       }
     });
     setAchievements(ACHIEVEMENT_DEFS.map(def => {
@@ -189,9 +220,9 @@ export function usePuffData() {
   /**
    * Recompute every achievement's progress from current app state and unlock
    * anything that just crossed its target. Runs reactively (see the effect
-   * below) rather than only right after logging a puff, since several of
-   * these depend on things that change independently of that (baseline,
-   * insight-page views, day rollover).
+   * below) rather than only right after logging a puff, since some of these
+   * depend on things that change independently of that (baseline, day
+   * rollover).
    */
   const refreshAchievements = () => {
     const totalPuffs = puffs.reduce((sum, p) => sum + p.count, 0);
@@ -217,9 +248,6 @@ export function usePuffData() {
 
     const progressById: Record<string, number> = {
       'first-log': totalPuffs >= 1 ? 1 : 0,
-      'streak-3': streakData.current,
-      'streak-7': streakData.current,
-      'streak-30': streakData.current,
       'goal-met': daysUnderLimit >= 1 ? 1 : 0,
       'goal-crusher': daysUnderLimit,
       'reduction-hero': Math.round(reductionPercent),
@@ -228,6 +256,51 @@ export function usePuffData() {
     setAchievements(prev => {
       let changed = false;
       const next = prev.map(a => {
+        // The streak card's title/description/icon/target change as it advances
+        // through tiers, so it's handled separately from the flat progress map.
+        if (a.id === 'streak-milestones') {
+          const finalThreshold = STREAK_TIERS[STREAK_TIERS.length - 1].threshold;
+          const oldThreshold = a.maxProgress;
+          const oldTierPassed = !a.unlockedAt && streakData.current >= oldThreshold;
+          const tier = streakTierFor(streakData.current);
+          const progress = Math.min(streakData.current, tier.threshold);
+          const nowFullyUnlocked = !a.unlockedAt && streakData.current >= finalThreshold;
+
+          if (a.title === tier.title && a.progress === progress && !nowFullyUnlocked) return a;
+          changed = true;
+
+          if (oldTierPassed && tier.threshold !== oldThreshold) {
+            const passedTier = STREAK_TIERS.find(t => t.threshold === oldThreshold);
+            if (passedTier) {
+              import('sonner').then(({ toast }) => {
+                toast.success(`Streak Milestone: ${passedTier.title}!`, {
+                  description: passedTier.description,
+                  duration: 4000
+                });
+              });
+            }
+          }
+
+          const updated: Achievement = {
+            ...a,
+            title: tier.title,
+            description: tier.description,
+            icon: tier.icon,
+            maxProgress: tier.threshold,
+            progress
+          };
+          if (nowFullyUnlocked) {
+            updated.unlockedAt = new Date();
+            import('sonner').then(({ toast }) => {
+              toast.success(`Achievement Unlocked: ${tier.title}!`, {
+                description: tier.description,
+                duration: 4000
+              });
+            });
+          }
+          return updated;
+        }
+
         const progress = Math.min(progressById[a.id] ?? 0, a.maxProgress);
         const nowUnlocked = !a.unlockedAt && progress >= a.maxProgress;
         if (progress === a.progress && !nowUnlocked) return a;
