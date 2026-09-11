@@ -23,8 +23,11 @@ export default function Insights() {
   const weeklyData = getWeeklyData();
   const insight = getInsight();
   const todaysPuffs = getTodaysPuffs();
+  const trackedDayCount = weeklyData.filter(d => d.puffs > 0).length;
   const weekTotal = weeklyData.reduce((sum, day) => sum + day.puffs, 0);
-  const weekAvg = Math.round(weekTotal / 7);
+  // Average over days that actually have logs — dividing by 7 on day one gives nonsense.
+  const weekAvg = trackedDayCount > 0 ? Math.round(weekTotal / trackedDayCount) : 0;
+  const avgReady = trackedDayCount >= 2;
   const recentAchievements = getRecentAchievements();
   const hasAnyData = puffs.length > 0;
 
@@ -35,7 +38,15 @@ export default function Insights() {
 
   const stats: StatItem[] = [
     { key: 'today', label: 'Today', value: todaysPuffs, unit: `/ ${dailyGoal}`, icon: Sun, tone: todayTone, hint: todaysPuffs >= dailyGoal ? 'Over limit' : `${dailyGoal - todaysPuffs} remaining` },
-    { key: 'avg', label: 'Week avg', value: weekAvg, unit: '/ day', icon: CalendarDays, tone: weekAvg <= dailyGoal ? 'default' : 'warning', hint: weekAvg <= dailyGoal ? 'On track' : 'Above goal' },
+    {
+      key: 'avg',
+      label: 'Week avg',
+      value: avgReady ? weekAvg : todaysPuffs,
+      unit: '/ day',
+      icon: CalendarDays,
+      tone: !avgReady ? 'default' : weekAvg <= dailyGoal ? 'default' : 'warning',
+      hint: !avgReady ? 'Day 1 — averages start tomorrow' : weekAvg <= dailyGoal ? `On track over ${trackedDayCount} days` : `Above goal over ${trackedDayCount} days`,
+    },
     { key: 'best', label: 'Best day', value: bestDay?.puffs ?? 0, unit: 'puffs', icon: Target, tone: 'success', hint: bestDay ? `${bestDay.date} this week` : 'No data yet' },
     { key: 'streak', label: 'Streak', value: streakData.current, unit: streakData.current === 1 ? 'day' : 'days', icon: Flame, tone: 'primary', hint: `Best: ${streakData.longest}` },
   ];

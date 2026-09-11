@@ -30,10 +30,12 @@ export function StatsCarousel({ items, className }: { items: StatItem[]; classNa
     loop: false,
   });
   const [selected, setSelected] = useState(0);
+  const [snapCount, setSnapCount] = useState(0);
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return;
     setSelected(emblaApi.selectedScrollSnap());
+    setSnapCount(emblaApi.scrollSnapList().length);
   }, [emblaApi]);
 
   useEffect(() => {
@@ -55,7 +57,7 @@ export function StatsCarousel({ items, className }: { items: StatItem[]; classNa
           {items.map(({ key, label, value, unit, icon: Icon, tone = 'default', hint }) => (
             <div
               key={key}
-              className="min-w-0 flex-[0_0_72%] sm:flex-[0_0_46%] rounded-lg border border-border bg-card p-5"
+              className="min-w-0 flex-[0_0_72%] sm:flex-[0_0_220px] rounded-lg border border-border bg-card p-5"
             >
               <div className="flex items-center justify-between mb-4">
                 <span className="label-meta">{label}</span>
@@ -75,7 +77,8 @@ export function StatsCarousel({ items, className }: { items: StatItem[]; classNa
         </div>
       </div>
 
-      {/* dots */}
+      {/* dots — only when there is actually something to scroll to */}
+      {snapCount > 1 && (
       <div className="mt-3 flex justify-center gap-1.5">
         {items.map((it, i) => (
           <button
@@ -89,6 +92,7 @@ export function StatsCarousel({ items, className }: { items: StatItem[]; classNa
           />
         ))}
       </div>
+      )}
     </div>
   );
 }

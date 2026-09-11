@@ -294,19 +294,31 @@ export function usePuffData() {
     return last7Days;
   };
 
+  const DAY_NAMES: Record<string, string> = {
+    Sun: 'Sundays', Mon: 'Mondays', Tue: 'Tuesdays', Wed: 'Wednesdays',
+    Thu: 'Thursdays', Fri: 'Fridays', Sat: 'Saturdays',
+  };
+
+  /** Minimum tracked days before we claim to see a pattern. */
+  const MIN_INSIGHT_DAYS = 3;
+
   const getInsight = () => {
     const weekData = getWeeklyData();
-    const maxDay = weekData.reduce((max, day) => day.puffs > max.puffs ? day : max);
-    const totalWeek = weekData.reduce((sum, day) => sum + day.puffs, 0);
-    const avgDaily = Math.round(totalWeek / 7);
-    
-    if (maxDay.puffs > avgDaily * 1.5) {
-      return `You tend to vape more on ${maxDay.date}s`;
-    } else if (getTodaysPuffs() < avgDaily) {
-      return "You're doing great today! Below your weekly average";
-    } else {
-      return `Your daily average this week is ${avgDaily} puffs`;
+    const tracked = weekData.filter(d => d.puffs > 0);
+    if (tracked.length < MIN_INSIGHT_DAYS) {
+      const left = MIN_INSIGHT_DAYS - tracked.length;
+      return `Log ${left} more day${left === 1 ? '' : 's'} and patterns will start to show here.`;
     }
+    const maxDay = tracked.reduce((max, day) => (day.puffs > max.puffs ? day : max));
+    const totalWeek = tracked.reduce((sum, day) => sum + day.puffs, 0);
+    const avgDaily = Math.round(totalWeek / tracked.length);
+
+    if (maxDay.puffs > avgDaily * 1.5) {
+      return `You tend to vape more on ${DAY_NAMES[maxDay.date] ?? maxDay.date}`;
+    } else if (getTodaysPuffs() < avgDaily) {
+      return "You're below your average so far this week — nice.";
+    }
+    return `You're averaging ${avgDaily} puffs on the days you've tracked this week.`;
   };
 
   const getStreakIcon = () => {
