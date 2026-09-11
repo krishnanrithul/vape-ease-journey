@@ -47,6 +47,25 @@ const periodKeyFor = (period: Goal['period'], existing?: string) => {
 const inferDirection = (category?: Goal['category']): Goal['direction'] =>
   category === 'reduction' ? 'decrease' : 'increase';
 
+/**
+ * Icon key for each built-in goal/milestone, by id — the single source of
+ * truth for the default objects below AND for refreshing the `icon` field
+ * on anything already sitting in localStorage from before the emoji ->
+ * icon-key migration (2026-09-11). Without the refresh, a goal or milestone
+ * created in an earlier session keeps its old emoji forever; AppIcon doesn't
+ * recognize it and silently falls back to the same generic icon for all of
+ * them, which looks like "every icon is broken" rather than what it is.
+ */
+const BUILTIN_GOAL_ICONS: Record<string, string> = {
+  'daily-reduction': 'target',
+  'weekly-reduction': 'trend-down',
+};
+const BUILTIN_MILESTONE_ICONS: Record<string, string> = {
+  'first-week': 'trophy',
+  'reduction-hero': 'star',
+  'consistency-master': 'crown',
+};
+
 export interface Milestone {
   id: string;
   title: string;
@@ -83,6 +102,7 @@ export function useAdvancedGoals(currentStreak = 0) {
     if (storedGoals) {
       setGoals(storedGoals.map(g => ({
         ...g,
+        icon: BUILTIN_GOAL_ICONS[g.id] ?? g.icon,
         direction: g.direction ?? inferDirection(g.category),
         startDate: new Date(g.startDate),
         endDate: g.endDate ? new Date(g.endDate) : undefined,
@@ -104,7 +124,7 @@ export function useAdvancedGoals(currentStreak = 0) {
           difficulty: 'medium' as const,
           direction: 'decrease' as const,
           isActive: true,
-          icon: 'target'
+          icon: BUILTIN_GOAL_ICONS['daily-reduction']
         },
         {
           id: 'weekly-reduction',
@@ -119,7 +139,7 @@ export function useAdvancedGoals(currentStreak = 0) {
           difficulty: 'medium' as const,
           direction: 'decrease' as const,
           isActive: true,
-          icon: 'trend-down'
+          icon: BUILTIN_GOAL_ICONS['weekly-reduction']
         }
       ];
       setGoals(defaultGoals);
@@ -130,6 +150,7 @@ export function useAdvancedGoals(currentStreak = 0) {
     if (storedMilestones) {
       setMilestones(storedMilestones.map(m => ({
         ...m,
+        icon: BUILTIN_MILESTONE_ICONS[m.id] ?? m.icon,
         completedAt: m.completedAt ? new Date(m.completedAt) : undefined
       })));
     } else {
@@ -142,7 +163,7 @@ export function useAdvancedGoals(currentStreak = 0) {
           threshold: 7,
           type: 'consecutive_days' as const,
           celebrationMessage: 'Amazing! You\'ve built the foundation of mindful awareness!',
-          icon: 'trophy',
+          icon: BUILTIN_MILESTONE_ICONS['first-week'],
           rewardPoints: 100
         },
         {
@@ -152,7 +173,7 @@ export function useAdvancedGoals(currentStreak = 0) {
           threshold: 25,
           type: 'total_reduction' as const,
           celebrationMessage: 'Incredible progress! You\'re mastering mindful consumption!',
-          icon: 'star',
+          icon: BUILTIN_MILESTONE_ICONS['reduction-hero'],
           rewardPoints: 250
         },
         {
@@ -162,7 +183,7 @@ export function useAdvancedGoals(currentStreak = 0) {
           threshold: 30,
           type: 'consecutive_days' as const,
           celebrationMessage: 'Outstanding dedication! You\'ve created a powerful habit!',
-          icon: 'crown',
+          icon: BUILTIN_MILESTONE_ICONS['consistency-master'],
           rewardPoints: 500
         }
       ];

@@ -18,6 +18,23 @@ export interface Achievement {
   type: 'milestone' | 'streak' | 'goal';
 }
 
+/**
+ * Single source of truth for each built-in achievement's icon key, used both
+ * to define `possibleAchievements` below and to refresh the `icon` field on
+ * achievements already sitting in localStorage from before the emoji ->
+ * icon-key migration (2026-09-11) — otherwise an achievement unlocked in an
+ * earlier session keeps its old emoji forever, which AppIcon doesn't
+ * recognize and silently renders as the generic fallback icon.
+ */
+const ACHIEVEMENT_ICONS: Record<string, string> = {
+  'first-log': 'sprout',
+  'week-tracking': 'sapling',
+  'month-tracking': 'flower',
+  'goal-met': 'target',
+  'streak-3': 'flame',
+  'streak-7': 'zap',
+};
+
 export interface StreakData {
   current: number;
   longest: number;
@@ -89,6 +106,7 @@ export function usePuffData() {
     if (storedAchievements.length) {
       setAchievements(storedAchievements.map(a => ({
         ...a,
+        icon: ACHIEVEMENT_ICONS[a.id] ?? a.icon,
         unlockedAt: a.unlockedAt ? new Date(a.unlockedAt) : undefined
       })));
     }
@@ -148,12 +166,12 @@ export function usePuffData() {
     const daysTracked = new Set(puffs.map(p => p.timestamp.toDateString())).size;
 
     const possibleAchievements = [
-      { id: 'first-log', title: 'First Step', description: 'Logged your first puff', icon: 'sprout', type: 'milestone' as const },
-      { id: 'week-tracking', title: 'Week Warrior', description: '7 days of tracking', icon: 'sapling', type: 'milestone' as const },
-      { id: 'month-tracking', title: 'Monthly Master', description: '30 days of tracking', icon: 'flower', type: 'milestone' as const },
-      { id: 'goal-met', title: 'Goal Getter', description: 'Met your daily goal', icon: 'target', type: 'goal' as const },
-      { id: 'streak-3', title: 'Consistency King', description: '3 day streak of tracking', icon: 'flame', type: 'streak' as const },
-      { id: 'streak-7', title: 'Week Streak', description: '7 day tracking streak', icon: 'zap', type: 'streak' as const },
+      { id: 'first-log', title: 'First Step', description: 'Logged your first puff', icon: ACHIEVEMENT_ICONS['first-log'], type: 'milestone' as const },
+      { id: 'week-tracking', title: 'Week Warrior', description: '7 days of tracking', icon: ACHIEVEMENT_ICONS['week-tracking'], type: 'milestone' as const },
+      { id: 'month-tracking', title: 'Monthly Master', description: '30 days of tracking', icon: ACHIEVEMENT_ICONS['month-tracking'], type: 'milestone' as const },
+      { id: 'goal-met', title: 'Goal Getter', description: 'Met your daily goal', icon: ACHIEVEMENT_ICONS['goal-met'], type: 'goal' as const },
+      { id: 'streak-3', title: 'Consistency King', description: '3 day streak of tracking', icon: ACHIEVEMENT_ICONS['streak-3'], type: 'streak' as const },
+      { id: 'streak-7', title: 'Week Streak', description: '7 day tracking streak', icon: ACHIEVEMENT_ICONS['streak-7'], type: 'streak' as const },
     ];
 
     possibleAchievements.forEach(achievement => {

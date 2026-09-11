@@ -38,6 +38,34 @@ export interface ProgressNode {
   progressPercent: number;
 }
 
+// Ids of default badges/progress-tree nodes mapped to their intended icon key.
+// Used both to define the defaults below and to refresh any already-persisted
+// data (from before icons were switched from emoji to these semantic keys) —
+// without this, stale localStorage values silently fail to match ICON_MAP and
+// fall back to a generic icon for every previously-existing user.
+const BUILTIN_BADGE_ICONS: Record<string, string> = {
+  'first-track': 'sprout',
+  'week-warrior': 'calendar-check',
+  'reduction-champion': 'trophy',
+  'mindful-master': 'flower',
+  'goal-crusher': 'dumbbell',
+  'insight-seeker': 'search',
+  'streak-legend': 'flame',
+  'early-bird': 'bird',
+};
+
+const BUILTIN_PROGRESS_NODE_ICONS: Record<string, string> = {
+  'awareness-foundation': 'sprout',
+  'mindful-observer': 'eye',
+  'pattern-detective': 'search',
+  'reduction-architect': 'hammer',
+  'mindful-master': 'bloom',
+};
+
+const MULTIPLIER_ICONS: Record<string, string> = Object.fromEntries(
+  MULTIPLIER_TIERS.map(t => [t.id, t.icon])
+);
+
 export function useAdvancedGamification() {
   const [badges, setBadges] = useState<Badge[]>([]);
   const [streakMultipliers, setStreakMultipliers] = useState<StreakMultiplier[]>([]);
@@ -53,7 +81,7 @@ export function useAdvancedGamification() {
         id: 'first-track',
         title: 'First Step',
         description: 'Begin your mindful journey',
-        icon: 'sprout',
+        icon: BUILTIN_BADGE_ICONS['first-track'],
         rarity: 'common',
         category: 'tracking',
         criteria: 'Log your first session',
@@ -64,7 +92,7 @@ export function useAdvancedGamification() {
         id: 'week-warrior',
         title: 'Week Warrior',
         description: 'Track for 7 consecutive days',
-        icon: 'calendar-check',
+        icon: BUILTIN_BADGE_ICONS['week-warrior'],
         rarity: 'rare',
         category: 'consistency',
         criteria: 'Maintain 7-day tracking streak',
@@ -75,7 +103,7 @@ export function useAdvancedGamification() {
         id: 'reduction-champion',
         title: 'Reduction Champion',
         description: 'Achieve 50% reduction from baseline',
-        icon: 'trophy',
+        icon: BUILTIN_BADGE_ICONS['reduction-champion'],
         rarity: 'epic',
         category: 'reduction',
         criteria: 'Reduce usage by 50%',
@@ -86,7 +114,7 @@ export function useAdvancedGamification() {
         id: 'mindful-master',
         title: 'Mindful Master',
         description: 'Complete 30 days of conscious tracking',
-        icon: 'flower',
+        icon: BUILTIN_BADGE_ICONS['mindful-master'],
         rarity: 'legendary',
         category: 'milestone',
         criteria: 'Track mindfully for 30 days',
@@ -97,7 +125,7 @@ export function useAdvancedGamification() {
         id: 'goal-crusher',
         title: 'Goal Crusher',
         description: 'Meet your daily goal 10 times',
-        icon: 'dumbbell',
+        icon: BUILTIN_BADGE_ICONS['goal-crusher'],
         rarity: 'rare',
         category: 'milestone',
         criteria: 'Achieve daily goals 10 times',
@@ -108,7 +136,7 @@ export function useAdvancedGamification() {
         id: 'insight-seeker',
         title: 'Insight Seeker',
         description: 'View insights 20 times',
-        icon: 'search',
+        icon: BUILTIN_BADGE_ICONS['insight-seeker'],
         rarity: 'common',
         category: 'tracking',
         criteria: 'Check insights regularly',
@@ -119,7 +147,7 @@ export function useAdvancedGamification() {
         id: 'streak-legend',
         title: 'Streak Legend',
         description: 'Maintain a 30-day streak',
-        icon: 'flame',
+        icon: BUILTIN_BADGE_ICONS['streak-legend'],
         rarity: 'legendary',
         category: 'consistency',
         criteria: 'Achieve 30-day tracking streak',
@@ -130,7 +158,7 @@ export function useAdvancedGamification() {
         id: 'early-bird',
         title: 'Early Bird',
         description: 'Log sessions before 9 AM ten times',
-        icon: 'bird',
+        icon: BUILTIN_BADGE_ICONS['early-bird'],
         rarity: 'rare',
         category: 'special',
         criteria: 'Track early morning sessions',
@@ -147,7 +175,7 @@ export function useAdvancedGamification() {
         id: 'awareness-foundation',
         title: 'Awareness Foundation',
         description: 'Build basic tracking habits',
-        icon: 'sprout',
+        icon: BUILTIN_PROGRESS_NODE_ICONS['awareness-foundation'],
         level: 1,
         isUnlocked: true,
         isCompleted: false,
@@ -159,7 +187,7 @@ export function useAdvancedGamification() {
         id: 'mindful-observer',
         title: 'Mindful Observer',
         description: 'Develop consistent tracking patterns',
-        icon: 'eye',
+        icon: BUILTIN_PROGRESS_NODE_ICONS['mindful-observer'],
         level: 2,
         isUnlocked: false,
         isCompleted: false,
@@ -171,7 +199,7 @@ export function useAdvancedGamification() {
         id: 'pattern-detective',
         title: 'Pattern Detective',
         description: 'Identify usage patterns and triggers',
-        icon: 'search',
+        icon: BUILTIN_PROGRESS_NODE_ICONS['pattern-detective'],
         level: 3,
         isUnlocked: false,
         isCompleted: false,
@@ -183,7 +211,7 @@ export function useAdvancedGamification() {
         id: 'reduction-architect',
         title: 'Reduction Architect',
         description: 'Master gradual reduction techniques',
-        icon: 'hammer',
+        icon: BUILTIN_PROGRESS_NODE_ICONS['reduction-architect'],
         level: 4,
         isUnlocked: false,
         isCompleted: false,
@@ -195,7 +223,7 @@ export function useAdvancedGamification() {
         id: 'mindful-master',
         title: 'Mindful Master',
         description: 'Achieve mastery through sustained practice',
-        icon: 'bloom',
+        icon: BUILTIN_PROGRESS_NODE_ICONS['mindful-master'],
         level: 5,
         isUnlocked: false,
         isCompleted: false,
@@ -211,6 +239,7 @@ export function useAdvancedGamification() {
     if (storedBadges) {
       setBadges(storedBadges.map(b => ({
         ...b,
+        icon: BUILTIN_BADGE_ICONS[b.id] ?? b.icon,
         unlockedAt: b.unlockedAt ? new Date(b.unlockedAt) : undefined
       })));
     } else {
@@ -218,10 +247,18 @@ export function useAdvancedGamification() {
     }
 
     const storedMultipliers = safeParse<StreakMultiplier[] | null>('streak-multipliers', null);
-    setStreakMultipliers(storedMultipliers ?? defaultMultipliers);
+    setStreakMultipliers(
+      storedMultipliers
+        ? storedMultipliers.map(m => ({ ...m, icon: MULTIPLIER_ICONS[m.id] ?? m.icon }))
+        : defaultMultipliers
+    );
 
     const storedProgressTree = safeParse<ProgressNode[] | null>('progress-tree', null);
-    setProgressTree(storedProgressTree ?? defaultProgressTree);
+    setProgressTree(
+      storedProgressTree
+        ? storedProgressTree.map(n => ({ ...n, icon: BUILTIN_PROGRESS_NODE_ICONS[n.id] ?? n.icon }))
+        : defaultProgressTree
+    );
 
     setTotalPoints(safeParseInt('total-gamification-points', 0));
     setHydrated(true);
