@@ -293,6 +293,22 @@ export function useAdvancedGoals(currentStreak = 0) {
     });
   };
 
+  /**
+   * Keep a "stay under the limit" goal's target in sync with a source of
+   * truth outside this hook (the app's daily-goal setting). Without this,
+   * a goal created with the default target — e.g. the built-in "Daily
+   * Mindful Limit" at 20 — never moves even after the user changes their
+   * real daily goal, so its "stayed under the limit" XP and its `current`
+   * ratio quietly track the wrong number forever.
+   */
+  const setGoalTarget = (goalId: string, target: number) => {
+    setGoals(prev => {
+      const goal = prev.find(g => g.id === goalId);
+      if (!goal || goal.target === target) return prev;
+      return prev.map(g => (g.id === goalId ? { ...g, target } : g));
+    });
+  };
+
   const toggleGoal = (goalId: string) => {
     setGoals(prev => prev.map(goal => 
       goal.id === goalId ? { ...goal, isActive: !goal.isActive } : goal
@@ -358,6 +374,7 @@ export function useAdvancedGoals(currentStreak = 0) {
     experiencePoints,
     createCustomGoal,
     updateGoalProgress,
+    setGoalTarget,
     toggleGoal,
     deleteGoal,
     checkMilestones,
