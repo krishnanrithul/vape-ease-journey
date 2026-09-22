@@ -1,21 +1,28 @@
 /**
  * Daily "log today?" reminder.
  *
- * Local-first app, no push server — so this uses the Web Notifications API and
- * only fires while the app (PWA or browser tab) is alive:
- *  - a timer aimed at the next reminder hour while the app is open
- *  - a catch-up check when the app comes to the foreground after the hour
- * Native Capacitor builds should swap this for @capacitor/local-notifications,
- * which can fire with the app closed.
+ * Local-first app, no push server. Two delivery paths:
+ *  - Native (iOS/Android via Capacitor): @capacitor/local-notifications schedules
+ *    a real OS-level notification that fires even with the app closed/killed.
+ *  - Web (browser tab / installed PWA): falls back to the Web Notifications API,
+ *    which only fires while the app is alive — a timer aimed at the next
+ *    reminder hour, plus a catch-up check when the app comes to the foreground.
  */
+
+import { Capacitor } from '@capacitor/core';
 
 export const REMINDER_ENABLED_KEY = 'vape-reminder-enabled';
 export const REMINDER_HOUR_KEY = 'vape-reminder-hour';
 const LAST_FIRED_KEY = 'vape-reminder-last-fired';
+/** Fixed id for the recurring native notification so re-scheduling replaces it instead of stacking. */
+const NATIVE_NOTIFICATION_ID = 1001;
 
 export const DEFAULT_REMINDER_HOUR = 21;
 
+const isNative = () => Capacitor.isNativePlatform();
+
 export function isReminderSupported(): boolean {
+  if (isNative()) return true;
   return typeof window !== 'undefined' && 'Notification' in window;
 }
 
@@ -30,15 +37,28 @@ export function getReminderHour(): number {
 
 export function setReminderHour(hour: number) {
   localStorage.setItem(REMINDER_HOUR_KEY, String(hour));
+  if (isReminderEnabled() && isNative()) void scheduleNativeReminder(hour);
 }
 
 /** Ask for permission (if needed) and persist the toggle. Returns the resulting enabled state. */
 export async function setReminderEnabled(enabled: boolean): Promise<boolean> {
   if (!enabled) {
     localStorage.setItem(REMINDER_ENABLED_KEY, 'false');
+    if (isNative()) await cancelNativeReminder();
     return false;
   }
   if (!isReminderSupported()) return false;
+
+  if (isNative()) {
+    const { LocalNotifications } = await import('@capacitor/local-notifications');
+    let perm = await LocalNotifications.checkPermissions();
+    if (perm.display !== 'granted') perm = await LocalNotifications.requestPermissions();
+    const ok = perm.display === 'granted';
+    localStorage.setItem(REMINDER_ENABLED_KEY, ok ? 'true' : 'false');
+    if (ok) await scheduleNativeReminder(getReminderHour());
+    return ok;
+  }
+
   let permission = Notification.permission;
   if (permission === 'default') permission = await Notification.requestPermission();
   const ok = permission === 'granted';
@@ -58,7 +78,28 @@ function nextFireDelayMs(hour: number): number {
   return target.getTime() - now.getTime();
 }
 
-async function showReminder() {
+/** Schedule (or replace) the recurring native notification at `hour`, every day. */
+async function scheduleNativeReminder(hour: number) {
+  const { LocalNotifications } = await import('@capacitor/local-notifications');
+  await LocalNotifications.cancel({ notifications: [{ id: NATIVE_NOTIFICATION_ID }] });
+  await LocalNotifications.schedule({
+    notifications: [
+      {
+        id: NATIVE_NOTIFICATION_ID,
+        title: 'VapeWise',
+        body: 'Log today? A quick tap keeps your streak honest.',
+        schedule: { on: { hour, minute: 0 }, allowWhileIdle: true },
+      },
+    ],
+  });
+}
+
+async function cancelNativeReminder() {
+  const { LocalNotifications } = await import('@capacitor/local-notifications');
+  await LocalNotifications.cancel({ notifications: [{ id: NATIVE_NOTIFICATION_ID }] });
+}
+
+async function showWebReminder() {
   if (Notification.permission !== 'granted') return;
   const title = 'VapeWise';
   const options: NotificationOptions = {
@@ -78,22 +119,32 @@ async function showReminder() {
 }
 
 /**
- * Fire the reminder now if it is due today and hasn't fired yet, unless the
- * caller says the user has already logged today.
+ * Fire the web reminder now if it is due today and hasn't fired yet, unless the
+ * caller says the user has already logged today. No-op on native — the OS
+ * handles firing there, this is only the in-app catch-up path for the web case.
  */
 export function fireIfDue(hasLoggedToday: boolean) {
+  if (isNative()) return;
   if (!isReminderEnabled() || !isReminderSupported()) return;
   if (hasLoggedToday) return;
   if (localStorage.getItem(LAST_FIRED_KEY) === todayKey()) return;
-  if (new Date().getHours() >= getReminderHour()) void showReminder();
+  if (new Date().getHours() >= getReminderHour()) void showWebReminder();
 }
 
 /**
- * Keep a timer aimed at the next reminder hour while the app is open.
- * Returns a cleanup function.
+ * Keep a timer aimed at the next reminder hour while the app is open (web only —
+ * on native the OS-scheduled notification below covers this). Returns a cleanup
+ * function. Also re-arms the native schedule once on mount, in case it was set
+ * up before the app last quit and needs to persist across app updates.
  */
 export function scheduleReminder(getHasLoggedToday: () => boolean): () => void {
   if (!isReminderEnabled() || !isReminderSupported()) return () => {};
+
+  if (isNative()) {
+    void scheduleNativeReminder(getReminderHour());
+    return () => {};
+  }
+
   let timer: number | undefined;
   const arm = () => {
     window.clearTimeout(timer);

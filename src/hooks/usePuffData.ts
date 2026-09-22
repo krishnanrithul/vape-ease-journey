@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { safeParse, safeParseInt } from '@/lib/safeStorage';
+import { exportBackup, importBackup } from '@/lib/backup';
+import { haptics } from '@/lib/haptics';
 
 export interface PuffEntry {
   id: string;
   timestamp: Date;
   count: number;
-  trigger?: string;
-  mood?: string;
 }
 
 export interface Achievement {
@@ -272,6 +272,7 @@ export function usePuffData() {
           if (oldTierPassed && tier.threshold !== oldThreshold) {
             const passedTier = STREAK_TIERS.find(t => t.threshold === oldThreshold);
             if (passedTier) {
+              haptics.achievementUnlocked();
               import('sonner').then(({ toast }) => {
                 toast.success(`Streak Milestone: ${passedTier.title}!`, {
                   description: passedTier.description,
@@ -291,6 +292,7 @@ export function usePuffData() {
           };
           if (nowFullyUnlocked) {
             updated.unlockedAt = new Date();
+            haptics.achievementUnlocked();
             import('sonner').then(({ toast }) => {
               toast.success(`Achievement Unlocked: ${tier.title}!`, {
                 description: tier.description,
@@ -308,6 +310,7 @@ export function usePuffData() {
         const updated: Achievement = { ...a, progress };
         if (nowUnlocked) {
           updated.unlockedAt = new Date();
+          haptics.achievementUnlocked();
           import('sonner').then(({ toast }) => {
             toast.success(`Achievement Unlocked: ${a.title}!`, {
               description: a.description,
@@ -339,13 +342,11 @@ export function usePuffData() {
     });
   };
 
-  const addPuff = (count: number = 1, trigger?: string, mood?: string) => {
+  const addPuff = (count: number = 1) => {
     const newPuff: PuffEntry = {
       id: Date.now().toString(),
       timestamp: new Date(),
       count,
-      trigger,
-      mood
     };
     setPuffs(prev => [newPuff, ...prev]);
     return newPuff.id;
@@ -366,25 +367,20 @@ export function usePuffData() {
   };
 
   /** Everything the app stores, as a JSON string (for export/backup). */
-  const exportData = () => {
-    const data: Record<string, unknown> = {};
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (!key) continue;
-      const raw = localStorage.getItem(key);
-      try {
-        data[key] = raw ? JSON.parse(raw) : raw;
-      } catch {
-        data[key] = raw;
-      }
-    }
-    return JSON.stringify({ app: 'VapeWise', exportedAt: new Date().toISOString(), data }, null, 2);
-  };
+  const exportData = () => exportBackup();
 
   /** Wipes all app data. Caller should reload so every hook re-hydrates. */
   const clearAllData = () => {
     localStorage.clear();
   };
+
+  /**
+   * Restore a JSON backup produced by exportData(). Replaces all current
+   * localStorage contents with the backup's. Caller should reload afterward
+   * so every hook re-hydrates from the restored data (same pattern as
+   * clearAllData). Returns an error message on failure, or null on success.
+   */
+  const importData = (json: string): string | null => importBackup(json);
 
   const getTodaysPuffs = () => {
     const today = new Date().toDateString();
@@ -483,6 +479,7 @@ export function usePuffData() {
     baseline,
     setBaseline,
     exportData,
+    importData,
     clearAllData,
     getTodaysPuffs,
     getWeeklyData,

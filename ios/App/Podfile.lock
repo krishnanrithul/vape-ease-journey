@@ -1,0 +1,34 @@
+PODS:
+  - Capacitor (7.4.2):
+    - CapacitorCordova
+  - CapacitorCordova (7.4.2)
+  - CapacitorHaptics (7.0.5):
+    - Capacitor
+  - CapacitorLocalNotifications (7.0.7):
+    - Capacitor
+
+DEPENDENCIES:
+  - "Capacitor (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorHaptics (from `../../node_modules/@capacitor/haptics`)"
+  - "CapacitorLocalNotifications (from `../../node_modules/@capacitor/local-notifications`)"
+
+EXTERNAL SOURCES:
+  Capacitor:
+    :path: "../../node_modules/@capacitor/ios"
+  CapacitorCordova:
+    :path: "../../node_modules/@capacitor/ios"
+  CapacitorHaptics:
+    :path: "../../node_modules/@capacitor/haptics"
+  CapacitorLocalNotifications:
+    :path: "../../node_modules/@capacitor/local-notifications"
+
+SPEC CHECKSUMS:
+  Capacitor: 156d98aba46ec01dde72c4bbb92fa626837cad29
+  CapacitorCordova: 5e58d04631bc5094894ac106e2bf1da18a9e6151
+  CapacitorHaptics: ec024a10130c230743219149c76a02da5cff6aed
+  CapacitorLocalNotifications: f8ccb7e9c9056a23f415398e51825594e953af3a
+
+PODFILE CHECKSUM: 4863b5fdfbb849aa15048162c8e7ae722b431975
+
+COCOAPODS: 1.10.2

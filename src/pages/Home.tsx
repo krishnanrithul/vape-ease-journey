@@ -13,6 +13,7 @@ import { TextEffect } from '@/components/motion-primitives/text-effect';
 import { RingGauge } from '@/components/RingGauge';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { toast } from 'sonner';
+import { haptics } from '@/lib/haptics';
 import emptyStateTracking from '@/assets/empty-state-tracking.jpg';
 
 export default function Home() {
@@ -31,6 +32,7 @@ export default function Home() {
   const handlePuffLog = () => {
     const logged = quickCount;
     const id = addPuff(logged);
+    haptics.puffLogged();
     toast.success(`${logged} puff${logged > 1 ? 's' : ''} logged`, {
       action: {
         label: 'Undo',

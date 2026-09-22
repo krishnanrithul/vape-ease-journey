@@ -30,7 +30,7 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.title.trim() || !formData.description.trim()) {
       setError('Please add both a title and a description.');
       return;
@@ -40,7 +40,7 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
       return;
     }
     setError(null);
-    
+
     const goalData: Partial<Goal> = {
       title: formData.title,
       description: formData.description,
@@ -52,10 +52,10 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
       reward: formData.reward || undefined,
       endDate: formData.endDate ? new Date(formData.endDate) : undefined
     };
-    
+
     onCreateGoal(goalData);
     setOpen(false);
-    
+
     // Reset form
     setFormData({
       title: '',
@@ -80,12 +80,12 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
           Create Custom Goal
         </Button>
       </DialogTrigger>
-      
+
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create Custom Goal</DialogTitle>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <p role="alert" className="text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-lg px-3 py-2">{error}</p>
@@ -100,7 +100,7 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
               required
             />
           </div>
-          
+
           <div>
             <Label htmlFor="description">Description</Label>
             <Textarea
@@ -112,7 +112,7 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
               required
             />
           </div>
-          
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="target">Target Number</Label>
@@ -125,10 +125,10 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
                 required
               />
             </div>
-            
+
             <div>
               <Label htmlFor="period">Time Period</Label>
-              <Select value={formData.period} onValueChange={(value: any) => setFormData(prev => ({ ...prev, period: value }))}>
+              <Select value={formData.period} onValueChange={(value: Goal['period']) => setFormData(prev => ({ ...prev, period: value }))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -141,11 +141,11 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
               </Select>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="category">Category</Label>
-              <Select value={formData.category} onValueChange={(value: any) => setFormData(prev => ({ ...prev, category: value }))}>
+              <Select value={formData.category} onValueChange={(value: Goal['category']) => setFormData(prev => ({ ...prev, category: value }))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -157,10 +157,10 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <Label htmlFor="difficulty">Difficulty</Label>
-              <Select value={formData.difficulty} onValueChange={(value: any) => setFormData(prev => ({ ...prev, difficulty: value }))}>
+              <Select value={formData.difficulty} onValueChange={(value: Goal['difficulty']) => setFormData(prev => ({ ...prev, difficulty: value }))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -172,7 +172,7 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
               </Select>
             </div>
           </div>
-          
+
           <div>
             <Label>Choose Icon</Label>
             <div className="grid grid-cols-5 gap-2 mt-2">
@@ -193,7 +193,7 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
               ))}
             </div>
           </div>
-          
+
           <div>
             <Label htmlFor="reward">Reward (Optional)</Label>
             <Input
@@ -203,7 +203,7 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
               placeholder="e.g., Treat yourself to something special"
             />
           </div>
-          
+
           {formData.period === 'custom' && (
             <div>
               <Label htmlFor="endDate">End Date (Optional)</Label>
@@ -215,7 +215,7 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
               />
             </div>
           )}
-          
+
           <div className="flex gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => setOpen(false)} className="flex-1">
               Cancel

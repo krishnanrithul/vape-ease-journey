@@ -46,11 +46,17 @@ export default function Goals() {
   // hardcoded target (20) and never updated after that — so if you'd
   // changed your daily goal since, it was quietly scoring "stayed under
   // your limit" against the old number. Keep it pinned to the real
-  // daily goal instead. (The "Weekly Progress" goal's target isn't a
-  // simple function of dailyGoal — its 10%-reduction math needs its own
-  // decision — so it's left as-is for now.)
+  // daily goal instead.
+  //
+  // Same bug applied to "Weekly Progress": its target was hardcoded to 120
+  // regardless of your actual daily goal (a 5/day goal was being measured
+  // against "reduce to 120/week" — nonsense; a 30/day goal against the same
+  // 120 — also wrong). Define it as a 10% reduction off your real weekly
+  // rate (dailyGoal * 7) instead, so it tracks whatever "Set Daily Goal"
+  // below is actually set to.
   useEffect(() => {
     setGoalTarget('daily-reduction', dailyGoal);
+    setGoalTarget('weekly-reduction', Math.max(1, Math.round(dailyGoal * 7 * 0.9)));
     // setGoalTarget/updateGoalProgress aren't memoized by useAdvancedGoals
     // (same as the effect below), so they're intentionally left out of the
     // deps — each call closes over the current one and is a no-op when
@@ -168,6 +174,7 @@ export default function Goals() {
                   variant="outline"
                   size="icon"
                   onClick={() => setNewGoal(Math.max(1, newGoal - 1))}
+                  aria-label="Decrease daily goal"
                 >
                   <Minus size={20} />
                 </Button>
@@ -181,6 +188,7 @@ export default function Goals() {
                   variant="outline"
                   size="icon"
                   onClick={() => setNewGoal(newGoal + 1)}
+                  aria-label="Increase daily goal"
                 >
                   <Plus size={20} />
                 </Button>

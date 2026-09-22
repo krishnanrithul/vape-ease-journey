@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Minus, Plus, Sun, Moon, Monitor, Download, Trash2, RotateCcw, ChevronLeft, History, Bell } from 'lucide-react';
+import { Minus, Plus, Sun, Moon, Monitor, Download, Upload, Trash2, RotateCcw, ChevronLeft, History, Bell } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -96,7 +96,7 @@ function Row({ label, hint, children }: { label: string; hint?: string; children
 
 export default function Settings() {
   const navigate = useNavigate();
-  const { dailyGoal, setDailyGoal, baseline, setBaseline, exportData, clearAllData, hydrated, puffs } = usePuffData();
+  const { dailyGoal, setDailyGoal, baseline, setBaseline, exportData, importData, clearAllData, hydrated, puffs } = usePuffData();
   const { resetOnboarding } = useOnboarding();
   const { theme, setTheme } = useTheme();
 
@@ -130,6 +130,27 @@ export default function Settings() {
     a.remove();
     URL.revokeObjectURL(url);
     toast.success('Backup downloaded');
+  };
+
+  const importFileRef = useRef<HTMLInputElement>(null);
+  const [pendingImportText, setPendingImportText] = useState<string | null>(null);
+
+  const handleImportFileChosen = async (file: File | undefined) => {
+    if (!file) return;
+    const text = await file.text();
+    setPendingImportText(text);
+  };
+
+  const confirmImport = () => {
+    if (pendingImportText === null) return;
+    const error = importData(pendingImportText);
+    setPendingImportText(null);
+    if (error) {
+      toast.error('Import failed', { description: error });
+      return;
+    }
+    // Full reload so every hook re-hydrates from the restored storage.
+    window.location.href = '/';
   };
 
   const handleClear = () => {
@@ -284,6 +305,37 @@ export default function Settings() {
               Export
             </Button>
           </Row>
+          <Row label="Import backup" hint="Restore from a previously exported file">
+            <input
+              ref={importFileRef}
+              type="file"
+              accept="application/json"
+              className="hidden"
+              onChange={(e) => {
+                void handleImportFileChosen(e.target.files?.[0]);
+                e.target.value = '';
+              }}
+            />
+            <Button variant="outline" onClick={() => importFileRef.current?.click()} disabled={!hydrated}>
+              <Upload size={16} className="mr-2" />
+              Import
+            </Button>
+          </Row>
+          <AlertDialog open={pendingImportText !== null} onOpenChange={(open) => !open && setPendingImportText(null)}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Replace all current data?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Importing this backup replaces everything currently on this device — logs, goals, streaks and
+                  achievements. This can't be undone. Export your current data first if you want to keep it.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={confirmImport}>Replace data</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           <Row label="Re-run onboarding" hint="Revisit the intro and reset your baseline">
             <Button variant="outline" onClick={handleReonboard}>
               <RotateCcw size={16} className="mr-2" />

@@ -77,6 +77,7 @@ export function GoalCard({ goal, onToggle, onDelete }: GoalCardProps) {
             size="icon"
             onClick={onToggle}
             className="h-8 w-8"
+            aria-label={goal.isActive ? 'Pause goal' : 'Resume goal'}
           >
             {goal.isActive ? <Pause size={16} /> : <Play size={16} />}
           </Button>
@@ -86,6 +87,7 @@ export function GoalCard({ goal, onToggle, onDelete }: GoalCardProps) {
               size="icon"
               onClick={onDelete}
               className="h-8 w-8 text-muted-foreground hover:text-destructive"
+              aria-label="Delete goal"
             >
               <Trash2 size={16} />
             </Button>
